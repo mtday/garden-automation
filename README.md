@@ -72,6 +72,12 @@ rm -rf rtl8192cu-fixes
 ```
 
 * Edit `/etc/gdm3/custom.conf` and uncomment/set the `AutomaticLoginEnable = true` and `AutomaticLogin = mday`.
+* Clone the garden automation source code.
+
+```
+git clone git@github.com:mtday/garden-automation.git
+```
+
 * Install common utilities.
 
 ```
