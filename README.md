@@ -72,6 +72,19 @@ rm -rf rtl8192cu-fixes
 ```
 
 * Edit `/etc/gdm3/custom.conf` and uncomment/set `AutomaticLoginEnable = true` and `AutomaticLogin = mday`.
+* Edit `/etc/sysctl.conf` and uncomment/set `net.ipv4.ip_forward=1` and `net.ipv6.conf.all.forwarding=1`.
+* Use a static IP address on `eth0`.
+
+```
+sudo nmcli con mod "Wired connection 1" \
+    con-name "wired" \
+    ipv4.addresses "192.168.10.170/24" \
+    ipv4.gateway "192.168.10.1" \
+    ipv4.dns "8.8.8.8,1.1.1.1" \
+    ipv4.method "manual"
+```
+
+* SSH back into the device.
 * Clone the garden automation source code.
 
 ```
@@ -93,9 +106,14 @@ sudo reboot now
 * Setup WiFi.
 
 ```
-sudo nmcli d wifi on
 sudo nmcli d wifi list
-sudo nmcli con add type wifi ifname wlan0 con-name "Days" autoconnect "yes" ip4 "192.168.10.150/24" gw4 "192.168.10.1" ssid "Days"
+sudo nmcli con add type wifi ifname wlan0 \
+    con-name "wifi-Days" \
+    ssid "Days" \
+    ipv4.addresses "192.168.10.130/24" \
+    ipv4.gateway "192.168.10.1" \
+    ipv4.dns "8.8.8.8,1.1.1.1" \
+    ipv4.method "manual"
 sudo nmcli d wifi connect "Days" password "Sir Ivory Newton Sees All!"
 ```
 
