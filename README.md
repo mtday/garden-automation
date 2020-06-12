@@ -29,7 +29,7 @@ screen /dev/tty.usbmodem* 115200
 * Update `/etc/sudoers` to allow sudo without a password:
 
 ```
-sudo printf "\nmday ALL=(ALL) NOPASSWD:ALL\n" | sudo tee -a /etc/sudoers
+printf "\nmday ALL=(ALL) NOPASSWD:ALL\n" | sudo tee -a /etc/sudoers
 ```
 
 * Fix WiFi disconnects (instructions from [here](https://www.datatobiz.com/2019/10/03/fixing-wifi-connectivity-nvidia-jetson-nano/)):
@@ -59,6 +59,12 @@ sudo reboot now
 sudo chmod 600 /etc/update-motd.d/*
 ```
 
+* Add additional hosts:
+
+```
+printf "\n192.168.10.50 broker\n" | sudo tee -a /etc/hosts
+```
+
 * Add `~/.ssh/authorized_keys` file containing a public SSH key to allow passwordless SSH into the device.
 * Add `~/.ssh/id_rsa` and `~/.ssh/id_rsa.pub` files for SSH off the device.
 * Add `~/.gitconfig` for common git aliases and user info.
@@ -73,13 +79,13 @@ sudo apt autoremove -y
 
 * Edit `/etc/gdm3/custom.conf` and uncomment/set `AutomaticLoginEnable = true` and `AutomaticLogin = mday`.
 
-* Clone the garden automation source code.
+* Clone the garden automation source code:
 
 ```
 git clone git@github.com:mtday/garden-automation.git
 ```
 
-* Install common utilities.
+* Install common utilities:
 
 ```
 sudo apt install -y apt-utils curl locate
@@ -90,19 +96,5 @@ sudo apt install -y apt-utils curl locate
 ```
 sudo apt install -y chrony
 sudo systemctl enable chrony.service
-```
-
-* Install and configure Mosquitto MQTT server.
-
-```
-sudo apt install -y mosquitto mosquitto-clients
-sudo systemctl enable mosquitto.service
-```
-
-* Install and configure Node-RED:
-
-```
-bash <(curl -sL https://raw.githubusercontent.com/node-red/linux-installers/master/deb/update-nodejs-and-nodered)
-sudo systemctl enable nodered.service
 ```
 
