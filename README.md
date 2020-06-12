@@ -26,10 +26,10 @@ screen /dev/tty.usbmodem* 115200
     * Use `jetson` as the hostname
 
 * After initial configuration, log into the device.
-* Add this line to `/etc/sudoers` to allow sudo without a password.
+* Update `/etc/sudoers` to allow sudo without a password.
 
 ```
-mday ALL=(ALL) NOPASSWD:ALL
+sudo printf "\nmday ALL=(ALL) NOPASSWD:ALL\n" | sudo tee -a /etc/sudoers
 ```
 
 * Disable login message.
