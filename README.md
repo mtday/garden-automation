@@ -1,8 +1,8 @@
 # garden-automation
 
-### Setup
+## Setup
 
-##### Jetson Nano
+### Jetson Nano
 
 * Download [JetPack](https://developer.nvidia.com/embedded/jetpack#install).
 * Use Balena Etcher to flash the image onto an SD card.
@@ -19,42 +19,17 @@ screen /dev/tty.usbmodem* 115200
 ```
 
 
-* Follow the boot instructions (accept terms of use, configure locale, create user, connect to wifi, etc.).
+* Follow the boot instructions (accept terms of use, configure locale, create user, connect to wifi, etc.):
 
     * Use `mday` as the username
-    * Use `eth0` as the primary network interface
+    * Use `wlan0` as the primary network interface
     * Use `jetson` as the hostname
 
-* After initial configuration, log into the device.
-* Update `/etc/sudoers` to allow sudo without a password.
+* After initial configuration, disconnect the USB serial cable and SSH into the device.
+* Update `/etc/sudoers` to allow sudo without a password:
 
 ```
 sudo printf "\nmday ALL=(ALL) NOPASSWD:ALL\n" | sudo tee -a /etc/sudoers
-```
-
-* Disable login message.
-
-```
-sudo chmod 600 /etc/update-motd.d/*
-```
-
-* Install an `~/.ssh/authorized_keys` file containing a public SSH key to allow passwordless SSH into the device.
-* Determine device IP address on `eth0` (cat5 network cable):
-
-```
-sudo ifconfig eth0
-```
-
-* SSH into the device IP address and disconnect the USB serial cable.
-* Add `~/.ssh/id_rsa` and `~/.ssh/id_rsa.pub` files for SSH off the device.
-* Add `~/.gitconfig` for common git aliases and user info.
-* Add `~/.vimrc` for common vim settings.
-* Add `~/.inputrc` for common command-line/shell settings.
-* Update the device.
-
-```
-sudo apt update -y && sudo apt upgrade -y
-sudo apt autoremove -y
 ```
 
 * Fix WiFi disconnects (instructions from [here](https://www.datatobiz.com/2019/10/03/fixing-wifi-connectivity-nvidia-jetson-nano/)):
@@ -71,20 +46,33 @@ sudo iw dev wlan0 set power_save off
 rm -rf rtl8192cu-fixes
 ```
 
+* Reboot the device:
+
+```
+sudo reboot now
+```
+
+
+* Disable login message:
+
+```
+sudo chmod 600 /etc/update-motd.d/*
+```
+
+* Add `~/.ssh/authorized_keys` file containing a public SSH key to allow passwordless SSH into the device.
+* Add `~/.ssh/id_rsa` and `~/.ssh/id_rsa.pub` files for SSH off the device.
+* Add `~/.gitconfig` for common git aliases and user info.
+* Add `~/.vimrc` for common vim settings.
+* Add `~/.inputrc` for common command-line/shell settings.
+* Update the device:
+
+```
+sudo apt update -y && sudo apt upgrade -y
+sudo apt autoremove -y
+```
+
 * Edit `/etc/gdm3/custom.conf` and uncomment/set `AutomaticLoginEnable = true` and `AutomaticLogin = mday`.
-* Edit `/etc/sysctl.conf` and uncomment/set `net.ipv4.ip_forward=1` and `net.ipv6.conf.all.forwarding=1`.
-* Use a static IP address on `eth0`.
 
-```
-sudo nmcli con mod "Wired connection 1" \
-    con-name "wired" \
-    ipv4.addresses "192.168.10.170/24" \
-    ipv4.gateway "192.168.10.1" \
-    ipv4.dns "8.8.8.8,1.1.1.1" \
-    ipv4.method "manual"
-```
-
-* SSH back into the device.
 * Clone the garden automation source code.
 
 ```
@@ -97,40 +85,6 @@ git clone git@github.com:mtday/garden-automation.git
 sudo apt install -y apt-utils curl locate
 ```
 
-* Reboot the device.
-
-```
-sudo reboot now
-```
-
-* Setup WiFi.
-
-```
-sudo nmcli d wifi list
-sudo nmcli con add type wifi ifname wlan0 \
-    con-name "wifi-Days" \
-    ssid "Days" \
-    ipv4.addresses "192.168.10.130/24" \
-    ipv4.gateway "192.168.10.1" \
-    ipv4.dns "8.8.8.8,1.1.1.1" \
-    ipv4.method "manual"
-sudo nmcli d wifi connect "Days" password "Sir Ivory Newton Sees All!"
-```
-
-* Verify WiFi connectivity.
-
-```
-ping -I wlan0 -c 3 8.8.8.8
-```
-
-* Determine device IP address on `wlan0` (WiFi network):
-
-```
-sudo ifconfig wlan0
-```
-
-* Disconnect ethernet cat5 cable.
-* SSH back into device using WiFi IP address.
 * Install and configure Chrony NTP service.
 
 ```
