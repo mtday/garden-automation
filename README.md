@@ -39,7 +39,7 @@ sudo chmod 600 /etc/update-motd.d/*
 ```
 
 * Install an `~/.ssh/authorized_keys` file containing a public SSH key to allow passwordless SSH into the device.
-* Determine device IP address on eth0 (cat5 network cable):
+* Determine device IP address on `eth0` (cat5 network cable):
 
 ```
 sudo ifconfig eth0
@@ -71,7 +71,7 @@ sudo iw dev wlan0 set power_save off
 rm -rf rtl8192cu-fixes
 ```
 
-* Edit `/etc/gdm3/custom.conf` and uncomment/set the `AutomaticLoginEnable = true` and `AutomaticLogin = mday`.
+* Edit `/etc/gdm3/custom.conf` and uncomment/set `AutomaticLoginEnable = true` and `AutomaticLogin = mday`.
 * Clone the garden automation source code.
 
 ```
@@ -95,7 +95,8 @@ sudo reboot now
 ```
 sudo nmcli d wifi on
 sudo nmcli d wifi list
-sudo nmcli d wifi connect "Days" password "<password>"
+sudo nmcli con add type wifi ifname wlan0 con-name "Days" autoconnect "yes" ip4 "192.168.10.150/24" gw4 "192.168.10.1" ssid "Days"
+sudo nmcli d wifi connect "Days" password "Sir Ivory Newton Sees All!"
 ```
 
 * Verify WiFi connectivity.
@@ -104,7 +105,7 @@ sudo nmcli d wifi connect "Days" password "<password>"
 ping -I wlan0 -c 3 8.8.8.8
 ```
 
-* Determine device IP address on wlan0 (WiFi network):
+* Determine device IP address on `wlan0` (WiFi network):
 
 ```
 sudo ifconfig wlan0
