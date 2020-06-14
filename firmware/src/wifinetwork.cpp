@@ -5,7 +5,7 @@
 #include "wifinetwork.h"
 
 
-WiFiNetwork::WiFiNetwork(const char *ssid, const char *password, const ulong connectTimeout)
+WiFiNetwork::WiFiNetwork(const String ssid, const String password, const ulong connectTimeout)
 {
     WiFiNetwork::ssid = ssid;
     WiFiNetwork::password = password;
@@ -36,7 +36,7 @@ bool WiFiNetwork::connect()
     WiFi.mode(WIFI_MODE_STA);
     const ulong start = millis();
     do {
-        const wl_status_t status = WiFi.begin(ssid, password);
+        const wl_status_t status = WiFi.begin(ssid.c_str(), password.c_str());
         switch (status) {
             case WL_CONNECTED:
                 ip = WiFi.localIP();

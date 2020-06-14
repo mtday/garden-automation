@@ -3,14 +3,15 @@
 #include <ArduinoJson.h>
 #include <Ethernet.h>
 #include <PubSubClient.h>
+#include "device.h"
 #include "messenger.h"
 
 
 Messenger::Messenger(
-    const char *deviceId,
+    String deviceId,
     WiFiNetwork *wifiNetwork,
-    const char *mqttBrokerIP,
-    const ushort mqttBrokerPort,
+    String mqttBrokerIP,
+    ushort mqttBrokerPort,
     std::function<void(char *, uint8_t *, uint)> messageHandler
 ) {
     IPAddress brokerIP = IPAddress();
@@ -25,7 +26,6 @@ Messenger::Messenger(
     Messenger::mqttClient = PubSubClient(ethernetClient);
     Messenger::mqttClient.setCallback(messageHandler);
     Messenger::mqttClient.setBufferSize(1024);
-    Messenger::mqttClient.subscribe("#");
 }
 
 bool Messenger::isConnected()
@@ -35,7 +35,7 @@ bool Messenger::isConnected()
 
 bool Messenger::connect()
 {
-    if (isConnected() || mqttClient.connect(deviceId)) {
+    if (isConnected() || mqttClient.connect(deviceId.c_str())) {
         return true;
     }
     return false;
@@ -52,23 +52,68 @@ bool Messenger::disconnect()
 
 void Messenger::loop()
 {
-    mqttClient.loop();
+    if (isConnected() || connect()) {
+        mqttClient.loop();
+    }
 }
 
-bool Messenger::send(const char *topic, StaticJsonDocument<1024> doc)
+bool Messenger::subscribe(const uint8_t functionality)
 {
     if (!isConnected() && !connect()) {
         return false;
     }
 
-    char buffer[1024];
-    size_t length = serializeJson(doc, buffer);
-    return mqttClient.publish(topic, buffer, length);
+    bool success = true;
+    success &= mqttClient.subscribe((String(TOPIC_CONFIG) + "/" + deviceId).c_str());
+
+    if (functionality & FUNCTIONALITY_SENSOR_TANK_DEPTH) {
+        success &= mqttClient.subscribe(TOPIC_SENSOR_TANK_DEPTH);
+    } else {
+        success &= mqttClient.unsubscribe(TOPIC_SENSOR_TANK_DEPTH);
+    }
+
+    if (functionality & FUNCTIONALITY_SENSOR_AMBIENT_TEMPERATURE) {
+        success &= mqttClient.subscribe(TOPIC_SENSOR_AMBIENT_TEMPERATURE);
+    } else {
+        success &= mqttClient.unsubscribe(TOPIC_SENSOR_AMBIENT_TEMPERATURE);
+    }
+
+    if (functionality & FUNCTIONALITY_SENSOR_AMBIENT_HUMIDITY) {
+        success &= mqttClient.subscribe(TOPIC_SENSOR_AMBIENT_HUMIDITY);
+    } else {
+        success &= mqttClient.unsubscribe(TOPIC_SENSOR_AMBIENT_HUMIDITY);
+    }
+
+    if (functionality & FUNCTIONALITY_SENSOR_AMBIENT_PRESSURE) {
+        success &= mqttClient.subscribe(TOPIC_SENSOR_AMBIENT_PRESSURE);
+    } else {
+        success &= mqttClient.unsubscribe(TOPIC_SENSOR_AMBIENT_PRESSURE);
+    }
+
+    if (functionality & FUNCTIONALITY_CONTROL_TANK_VALVE) {
+        success &= mqttClient.subscribe(TOPIC_CONTROL_TANK_VALVE);
+    } else {
+        success &= mqttClient.unsubscribe(TOPIC_CONTROL_TANK_VALVE);
+    }
+
+    return success;
 }
 
-bool Messenger::sendConfigRequest()
+bool Messenger::unsubscribe(String topic)
 {
-    StaticJsonDocument<1024> doc;
-    doc["device"] = deviceId;
-    return send("config/request", doc);
+    if (!isConnected() && !connect()) {
+        return false;
+    }
+    return mqttClient.unsubscribe(topic.c_str());
+}
+
+bool Messenger::publish(String topic, StaticJsonDocument<1024> message)
+{
+    if (!isConnected() && !connect()) {
+        return false;
+    }
+
+    char json[1024];
+    const size_t length = serializeJson(message, json);
+    return mqttClient.publish(topic.c_str(), json, length);
 }

@@ -8,36 +8,55 @@
 #include "wifinetwork.h"
 
 
-typedef enum {
-    DEVICE_TYPE_UNKNOWN,
-    DEVICE_TYPE_TANK_SENSOR,
-    DEVICE_TYPE_TANK_VALVE_CONTROLLER
-} device_type_t;
+// device functionality
+#define FUNCTIONALITY_SENSOR_TANK_DEPTH          (1 << 0) // 1
+#define FUNCTIONALITY_SENSOR_AMBIENT_TEMPERATURE (1 << 2) // 2
+#define FUNCTIONALITY_SENSOR_AMBIENT_HUMIDITY    (1 << 3) // 4
+#define FUNCTIONALITY_SENSOR_AMBIENT_PRESSURE    (1 << 4) // 8
+#define FUNCTIONALITY_CONTROL_TANK_VALVE         (1 << 5) // 16
 
 
 class Device
 {
 private:
-    const char *id;
-    device_type_t type;
+    String id;
+    uint8_t functionality;
 
     WiFiNetwork *wifiNetwork;
     Messenger *messenger;
     NTPTime *ntpTime;
 
+    ulong lastHeartbeat;
+
 public:
     Device(
-        const char *wifissid,
-        const char *wifiPassword,
+        const String wifissid,
+        const String wifiPassword,
         const ulong wifiConnectTimeout,
-        const char *mqttBrokerIP,
+        const String mqttBrokerIP,
         const ushort mqttBrokerPort,
         std::function<void(char *, uint8_t *, uint)> messageHandler
     );
 
     void setup();
     void loop();
-    void handleMessage(char *topic, uint8_t *payload, uint length);
+
+    bool notifyError(String message);
+    bool heartbeat();
+
+    bool requestConfig();
+    bool configure(StaticJsonDocument<1024> message);
+
+    bool handleMessage(String topic, StaticJsonDocument<1024> message);
+
+    // sensor readings
+    bool readTankDepth(StaticJsonDocument<1024> message);
+    bool readAmbientTemperature(StaticJsonDocument<1024> message);
+    bool readAmbientHumidity(StaticJsonDocument<1024> message);
+    bool readAmbientPressure(StaticJsonDocument<1024> message);
+
+    // control actions
+    bool controlTankValve(StaticJsonDocument<1024> message);
 };
 
 

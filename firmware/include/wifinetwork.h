@@ -9,15 +9,15 @@
 class WiFiNetwork
 {
 private:
-    const char *ssid;
-    const char *password;
+    String ssid;
+    String password;
     ulong connectTimeout;
 
     uint8_t mac[6];
     IPAddress ip;
 
 public:
-    WiFiNetwork(const char *ssid, const char *password, const ulong connectTimeout);
+    WiFiNetwork(const String ssid, const String password, const ulong connectTimeout);
 
     uint8_t *getMac();
     IPAddress getIp();

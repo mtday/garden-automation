@@ -5,9 +5,21 @@
 
 static Device *device;
 
-static void messageHandler(char* topic, uint8_t* payload, uint length) {
+static void messageHandler(char *topic, uint8_t *payload, uint length) {
     if (device) {
-        device->handleMessage(topic, payload, length);
+        Serial.print("Message: ");
+        Serial.print(topic);
+        Serial.print(" => ");
+        for (int i = 0; i < length; i++) {
+            Serial.print((char) payload[i]);
+        }
+        Serial.println();
+
+        StaticJsonDocument<1024> message;
+        deserializeJson(message, payload, length);
+
+        if (!device->handleMessage(topic, message)) {
+        }
     }
 }
 
