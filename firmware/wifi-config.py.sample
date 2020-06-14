@@ -1,0 +1,4 @@
+import os
+
+os.environ["WIFI_SSID"] = "my-ssid"
+os.environ["WIFI_PASSWORD"] = "my-password"
