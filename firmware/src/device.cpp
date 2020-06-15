@@ -16,15 +16,16 @@ Device::Device(
     uint8_t macAddress[6];
     WiFi.macAddress(macAddress);
     char deviceId[5];
-    sprintf(deviceId, "%02x%02x", macAddress[4], macAddress[5]);
+    snprintf(deviceId, 5, "%02x%02x", macAddress[4], macAddress[5]);
 
     id = deviceId;
     functionality = 0; // no capabilities are available until configuration happens
     lastHeartbeat = 0;
 
     wifiNetwork = new WiFiNetwork(wifissid, wifiPassword, wifiConnectTimeout);
-    messenger = new Messenger(id, wifiNetwork, mqttBrokerIP, mqttBrokerPort, messageHandler);
     ntpTime = new NTPTime();
+    messenger = new Messenger(id, wifiNetwork, ntpTime, mqttBrokerIP, mqttBrokerPort, messageHandler);
+    bmeSensor = new BmeSensor();
 }
 
 void Device::setup()
@@ -46,7 +47,7 @@ void Device::setup()
     ntpTime->setup();
     Serial.printf("Current time: %ld\n", ntpTime->now());
 
-    if (!requestConfig()) {
+    if (!messenger->publishConfigRequest()) {
         Serial.println("Failed to request device configuration, restarting in 5 seconds");
         delay(5000);
         esp_restart();
@@ -60,128 +61,94 @@ void Device::loop()
     delay(5000);
 
     ulong now = millis();
-    if (now - lastHeartbeat > HEARTBEAT_INTERVAL && heartbeat()) {
+    if (now - lastHeartbeat > HEARTBEAT_INTERVAL && messenger->publishHeartbeat()) {
         lastHeartbeat = now;
     }
 }
 
-bool Device::notifyError(String message)
+bool Device::configure(const uint8_t functionality)
 {
-    Serial.println(message.c_str());
+    Device::functionality = functionality;
 
-    StaticJsonDocument<1024> notification;
-    notification["device"] = id;
-    notification["timestamp"] = ntpTime->now();
-    notification["message"] = message.c_str();
-    return messenger->publish(TOPIC_ERROR, notification);
-}
-
-bool Device::heartbeat()
-{
-    StaticJsonDocument<1024> heartbeat;
-    heartbeat["device"] = id;
-    heartbeat["timestamp"] = ntpTime->now();
-    return messenger->publish(TOPIC_HEARTBEAT, heartbeat);
-}
-
-bool Device::requestConfig()
-{
-    StaticJsonDocument<1024> request;
-    request["device"] = id;
-    request["timestamp"] = ntpTime->now();
-    return messenger->publish(TOPIC_CONFIG, request);
-}
-
-bool Device::configure(StaticJsonDocument<1024> message)
-{
-    functionality = message["functionality"];
+    // setup the bme sensor when necessary
+    if (functionality & FUNCTIONALITY_SENSOR_AMBIENT_TEMPERATURE
+            || functionality & FUNCTIONALITY_SENSOR_AMBIENT_HUMIDITY
+            || functionality & FUNCTIONALITY_SENSOR_AMBIENT_PRESSURE) {
+        if (!bmeSensor->setup()) {
+            messenger->publishError("Failed to initialize sensor.");
+            return false;
+        }
+    }
 
     // update subscriptions based on the functionality configured for this device
     return messenger->subscribe(functionality);
 }
 
-bool Device::handleMessage(String topic, StaticJsonDocument<1024> message)
+uint8_t Device::getFunctionality()
 {
-    if (topic == String(TOPIC_CONFIG) + "/" + id) {
-        return configure(message);
-    } else if (functionality & FUNCTIONALITY_SENSOR_TANK_DEPTH
-            && topic == TOPIC_SENSOR_TANK_DEPTH) {
-        return readTankDepth(message);
-    } else if (functionality & FUNCTIONALITY_SENSOR_AMBIENT_TEMPERATURE
-            && topic == TOPIC_SENSOR_AMBIENT_TEMPERATURE) {
-        return readAmbientTemperature(message);
-    } else if (functionality & FUNCTIONALITY_SENSOR_AMBIENT_HUMIDITY
-            && topic == TOPIC_SENSOR_AMBIENT_HUMIDITY) {
-        return readAmbientHumidity(message);
-    } else if (functionality & FUNCTIONALITY_SENSOR_AMBIENT_PRESSURE
-            && topic == TOPIC_SENSOR_AMBIENT_PRESSURE) {
-        return readAmbientPressure(message);
-    } else if (functionality & FUNCTIONALITY_CONTROL_TANK_VALVE
-            && topic == TOPIC_CONTROL_TANK_VALVE) {
-        return controlTankValve(message);
-    } else {
-        notifyError(String("Received message on unsupported topic: ") + topic);
-        return false;
-    }
+    return functionality;
 }
 
-bool Device::readTankDepth(StaticJsonDocument<1024> message)
+bool Device::hasFunctionality(const uint8_t functionality)
+{
+    return Device::functionality & functionality;
+}
+
+bool Device::handleMessage(String topic, StaticJsonDocument<1024> message)
+{
+    return messenger->handleMessage(this, topic, message);
+}
+
+bool Device::readTankDepth()
 {
     // TODO: actually read the tank depth
     const float depth = 33.5; // in centimeters
-
-    StaticJsonDocument<1024> reading;
-    reading["device"] = id;
-    reading["timestamp"] = ntpTime->now();
-    reading["depth"] = depth;
-    return messenger->publish(String(TOPIC_SENSOR_TANK_DEPTH) + "/" + id, reading);
+    if (depth == NAN) {
+        messenger->publishError("Failed to read tank depth from sensor.");
+        return false;
+    }
+    return messenger->publishTankDepth(depth);
 }
 
-bool Device::readAmbientTemperature(StaticJsonDocument<1024> message)
+bool Device::readAmbientTemperature()
 {
-    // TODO: actually read the temperature
-    const float temperature = 79.5; // in Fahrenheit
-
-    StaticJsonDocument<1024> reading;
-    reading["device"] = id;
-    reading["timestamp"] = ntpTime->now();
-    reading["temperature"] = temperature;
-    return messenger->publish(String(TOPIC_SENSOR_AMBIENT_TEMPERATURE) + "/" + id, reading);
+    const float temperature = bmeSensor->readTemperature(); // in Celsius
+    if (temperature == NAN) {
+        messenger->publishError("Failed to read temperature from sensor.");
+        return false;
+    }
+    return messenger->publishAmbientTemperature(temperature);
 }
 
-bool Device::readAmbientHumidity(StaticJsonDocument<1024> message)
+bool Device::readAmbientHumidity()
 {
     // TODO: actually read the humidity
-    const float humidity = 79.5;
-
-    StaticJsonDocument<1024> reading;
-    reading["device"] = id;
-    reading["timestamp"] = ntpTime->now();
-    reading["humidity"] = humidity;
-    return messenger->publish(String(TOPIC_SENSOR_AMBIENT_HUMIDITY) + "/" + id, reading);
+    const float humidity = bmeSensor->readHumidity();
+    if (humidity == NAN) {
+        messenger->publishError("Failed to read humidity from sensor.");
+        return false;
+    }
+    return messenger->publishAmbientTemperature(humidity);
 }
 
-bool Device::readAmbientPressure(StaticJsonDocument<1024> message)
+bool Device::readAmbientPressure()
 {
     // TODO: actually read the pressure
-    const float pressure = 1102.5;
-
-    StaticJsonDocument<1024> reading;
-    reading["device"] = id;
-    reading["timestamp"] = ntpTime->now();
-    reading["pressure"] = pressure;
-    return messenger->publish(String(TOPIC_SENSOR_AMBIENT_PRESSURE) + "/" + id, reading);
+    const float pressure = bmeSensor->readPressure();
+    if (pressure == NAN) {
+        messenger->publishError("Failed to read pressure from sensor.");
+        return false;
+    }
+    return messenger->publishAmbientPressure(pressure);
 }
 
-
-bool Device::controlTankValve(StaticJsonDocument<1024> message)
+bool Device::controlTankValve(const bool status)
 {
     // TODO: actually control the valve
-    const bool state = true;
-
-    StaticJsonDocument<1024> control;
-    control["device"] = id;
-    control["timestamp"] = ntpTime->now();
-    control["state"] = state;
-    return messenger->publish(String(TOPIC_CONTROL_TANK_VALVE) + "/" + id, control);
+    const bool updatedStatus = status;
+    if (false) { // TODO
+        messenger->publishError("Failed to control tank valve.");
+        return false;
+    }
+    return messenger->publishTankValveStatus(updatedStatus);
 }

@@ -19,6 +19,7 @@ static void messageHandler(char *topic, uint8_t *payload, uint length) {
         deserializeJson(message, payload, length);
 
         if (!device->handleMessage(topic, message)) {
+            Serial.println("Failed to handle message");
         }
     }
 }

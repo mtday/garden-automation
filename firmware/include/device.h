@@ -3,6 +3,10 @@
 #define _GARDEN_AUTOMATION_DEVICE_H
 
 
+class Device;
+
+
+#include "bmesensor.h"
 #include "messenger.h"
 #include "ntptime.h"
 #include "wifinetwork.h"
@@ -25,6 +29,7 @@ private:
     WiFiNetwork *wifiNetwork;
     Messenger *messenger;
     NTPTime *ntpTime;
+    BmeSensor *bmeSensor;
 
     ulong lastHeartbeat;
 
@@ -41,22 +46,20 @@ public:
     void setup();
     void loop();
 
-    bool notifyError(String message);
-    bool heartbeat();
-
-    bool requestConfig();
-    bool configure(StaticJsonDocument<1024> message);
+    bool configure(const uint8_t functionality);
+    uint8_t getFunctionality();
+    bool hasFunctionality(const uint8_t functionality);
 
     bool handleMessage(String topic, StaticJsonDocument<1024> message);
 
-    // sensor readings
-    bool readTankDepth(StaticJsonDocument<1024> message);
-    bool readAmbientTemperature(StaticJsonDocument<1024> message);
-    bool readAmbientHumidity(StaticJsonDocument<1024> message);
-    bool readAmbientPressure(StaticJsonDocument<1024> message);
+    // perform sensor readings
+    bool readTankDepth();
+    bool readAmbientTemperature();
+    bool readAmbientHumidity();
+    bool readAmbientPressure();
 
-    // control actions
-    bool controlTankValve(StaticJsonDocument<1024> message);
+    // perform control actions
+    bool controlTankValve(bool status);
 };
 
 
