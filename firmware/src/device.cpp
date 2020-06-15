@@ -3,6 +3,7 @@
 #include <ArduinoJson.h>
 #include <WiFi.h>
 #include "device.h"
+#include "functionality.h"
 
 
 Device::Device(
@@ -26,6 +27,7 @@ Device::Device(
     ntpTime = new NTPTime();
     messenger = new Messenger(id, wifiNetwork, ntpTime, mqttBrokerIP, mqttBrokerPort, messageHandler);
     bmeSensor = new BmeSensor();
+    hcsrSensor = new HcsrSensor(bmeSensor);
 }
 
 void Device::setup()
@@ -66,18 +68,27 @@ void Device::loop()
     }
 }
 
-bool Device::configure(const uint8_t functionality)
+bool Device::configure(const uint8_t functionality, const float maxReading, const float minReading)
 {
     Device::functionality = functionality;
 
     // setup the bme sensor when necessary
-    if (functionality & FUNCTIONALITY_SENSOR_AMBIENT_TEMPERATURE
-            || functionality & FUNCTIONALITY_SENSOR_AMBIENT_HUMIDITY
-            || functionality & FUNCTIONALITY_SENSOR_AMBIENT_PRESSURE) {
+    if (hasFunctionality(functionality, FUNCTIONALITY_SENSOR_AMBIENT_TEMPERATURE)
+            || hasFunctionality(functionality, FUNCTIONALITY_SENSOR_AMBIENT_HUMIDITY)
+            || hasFunctionality(functionality, FUNCTIONALITY_SENSOR_AMBIENT_PRESSURE)) {
         if (!bmeSensor->setup()) {
-            messenger->publishError("Failed to initialize sensor.");
+            messenger->publishError("Failed to initialize BME sensor.");
             return false;
         }
+    }
+
+    // setup the hcsr sensor when necessary
+    if (hasFunctionality(functionality, FUNCTIONALITY_SENSOR_TANK_LEVEL)) {
+        if (!hcsrSensor->setup()) {
+            messenger->publishError("Failed to initialize HCSR sensor.");
+            return false;
+        }
+        hcsrSensor->configure(functionality, maxReading, minReading);
     }
 
     // update subscriptions based on the functionality configured for this device
@@ -89,25 +100,19 @@ uint8_t Device::getFunctionality()
     return functionality;
 }
 
-bool Device::hasFunctionality(const uint8_t functionality)
-{
-    return Device::functionality & functionality;
-}
-
 bool Device::handleMessage(String topic, StaticJsonDocument<1024> message)
 {
     return messenger->handleMessage(this, topic, message);
 }
 
-bool Device::readTankDepth()
+bool Device::readTankLevel()
 {
-    // TODO: actually read the tank depth
-    const float depth = 33.5; // in centimeters
-    if (depth == NAN) {
-        messenger->publishError("Failed to read tank depth from sensor.");
+    const float level = hcsrSensor->readLevel(); // as % of max capacity
+    if (level == NAN) {
+        messenger->publishError("Failed to read tank level from sensor.");
         return false;
     }
-    return messenger->publishTankDepth(depth);
+    return messenger->publishTankLevel(level);
 }
 
 bool Device::readAmbientTemperature()

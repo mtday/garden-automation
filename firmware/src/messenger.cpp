@@ -4,6 +4,7 @@
 #include <Ethernet.h>
 #include <PubSubClient.h>
 #include "device.h"
+#include "functionality.h"
 #include "messenger.h"
 
 
@@ -67,31 +68,31 @@ bool Messenger::subscribe(const uint8_t functionality)
     bool success = true;
     success &= mqttClient.subscribe((String(TOPIC_CONFIG) + "/" + deviceId).c_str());
 
-    if (functionality & FUNCTIONALITY_SENSOR_TANK_DEPTH) {
-        success &= mqttClient.subscribe(TOPIC_SENSOR_TANK_DEPTH);
+    if (hasFunctionality(functionality, FUNCTIONALITY_SENSOR_TANK_LEVEL)) {
+        success &= mqttClient.subscribe(TOPIC_SENSOR_TANK_LEVEL);
     } else {
-        success &= mqttClient.unsubscribe(TOPIC_SENSOR_TANK_DEPTH);
+        success &= mqttClient.unsubscribe(TOPIC_SENSOR_TANK_LEVEL);
     }
 
-    if (functionality & FUNCTIONALITY_SENSOR_AMBIENT_TEMPERATURE) {
+    if (hasFunctionality(functionality, FUNCTIONALITY_SENSOR_AMBIENT_TEMPERATURE)) {
         success &= mqttClient.subscribe(TOPIC_SENSOR_AMBIENT_TEMPERATURE);
     } else {
         success &= mqttClient.unsubscribe(TOPIC_SENSOR_AMBIENT_TEMPERATURE);
     }
 
-    if (functionality & FUNCTIONALITY_SENSOR_AMBIENT_HUMIDITY) {
+    if (hasFunctionality(functionality, FUNCTIONALITY_SENSOR_AMBIENT_HUMIDITY)) {
         success &= mqttClient.subscribe(TOPIC_SENSOR_AMBIENT_HUMIDITY);
     } else {
         success &= mqttClient.unsubscribe(TOPIC_SENSOR_AMBIENT_HUMIDITY);
     }
 
-    if (functionality & FUNCTIONALITY_SENSOR_AMBIENT_PRESSURE) {
+    if (hasFunctionality(functionality, FUNCTIONALITY_SENSOR_AMBIENT_PRESSURE)) {
         success &= mqttClient.subscribe(TOPIC_SENSOR_AMBIENT_PRESSURE);
     } else {
         success &= mqttClient.unsubscribe(TOPIC_SENSOR_AMBIENT_PRESSURE);
     }
 
-    if (functionality & FUNCTIONALITY_CONTROL_TANK_VALVE) {
+    if (hasFunctionality(functionality, FUNCTIONALITY_CONTROL_TANK_VALVE)) {
         success &= mqttClient.subscribe(TOPIC_CONTROL_TANK_VALVE);
     } else {
         success &= mqttClient.unsubscribe(TOPIC_CONTROL_TANK_VALVE);
@@ -111,20 +112,27 @@ bool Messenger::unsubscribe(String topic)
 bool Messenger::handleMessage(Device *device, String topic, StaticJsonDocument<1024> message)
 {
     if (topic == String(TOPIC_CONFIG) + "/" + deviceId) {
-        return device->configure(message["functionality"]);
-    } else if (device->hasFunctionality(FUNCTIONALITY_SENSOR_TANK_DEPTH)
-            && topic == TOPIC_SENSOR_TANK_DEPTH) {
-        return device->readTankDepth();
-    } else if (device->hasFunctionality(FUNCTIONALITY_SENSOR_AMBIENT_TEMPERATURE)
+        const uint8_t functionality = message["functionality"];
+        const float maxReading = hasFunctionality(functionality, FUNCTIONALITY_SENSOR_TANK_LEVEL)
+                ? message["maxReading"]
+                : NAN;
+        const float minReading = hasFunctionality(functionality, FUNCTIONALITY_SENSOR_TANK_LEVEL)
+                ? message["minReading"]
+                : NAN;
+        return device->configure(functionality, maxReading, minReading);
+    } else if (hasFunctionality(device->getFunctionality(), FUNCTIONALITY_SENSOR_TANK_LEVEL)
+            && topic == TOPIC_SENSOR_TANK_LEVEL) {
+        return device->readTankLevel();
+    } else if (hasFunctionality(device->getFunctionality(), FUNCTIONALITY_SENSOR_AMBIENT_TEMPERATURE)
             && topic == TOPIC_SENSOR_AMBIENT_TEMPERATURE) {
         return device->readAmbientTemperature();
-    } else if (device->hasFunctionality(FUNCTIONALITY_SENSOR_AMBIENT_HUMIDITY)
+    } else if (hasFunctionality(device->getFunctionality(), FUNCTIONALITY_SENSOR_AMBIENT_HUMIDITY)
             && topic == TOPIC_SENSOR_AMBIENT_HUMIDITY) {
         return device->readAmbientHumidity();
-    } else if (device->hasFunctionality(FUNCTIONALITY_SENSOR_AMBIENT_PRESSURE)
+    } else if (hasFunctionality(device->getFunctionality(), FUNCTIONALITY_SENSOR_AMBIENT_PRESSURE)
             && topic == TOPIC_SENSOR_AMBIENT_PRESSURE) {
         return device->readAmbientPressure();
-    } else if (device->hasFunctionality(FUNCTIONALITY_CONTROL_TANK_VALVE)
+    } else if (hasFunctionality(device->getFunctionality(), FUNCTIONALITY_CONTROL_TANK_VALVE)
             && topic == TOPIC_CONTROL_TANK_VALVE) {
         return device->controlTankValve(message["status"]);
     } else {
@@ -141,6 +149,7 @@ bool Messenger::publish(String topic, StaticJsonDocument<1024> message)
 
     char json[1024];
     const size_t length = serializeJson(message, json);
+    Serial.printf("Sending: %s => %s\n", topic.c_str(), json);
     return mqttClient.publish(topic.c_str(), json, length);
 }
 
@@ -169,14 +178,14 @@ bool Messenger::publishConfigRequest()
     return publish(String(TOPIC_CONFIG), message);
 }
 
-bool Messenger::publishTankDepth(const float depth)
+bool Messenger::publishTankLevel(const float level)
 {
     StaticJsonDocument<1024> message;
     message["device"] = deviceId;
     message["timestamp"] = ntpTime->now();
-    message["depth"] = depth;
-    message["unit"] = "centimeters";
-    return publish(String(TOPIC_SENSOR_TANK_DEPTH) + "/" + deviceId, message);
+    message["level"] = level;
+    message["unit"] = "percent";
+    return publish(String(TOPIC_SENSOR_TANK_LEVEL) + "/" + deviceId, message);
 }
 
 bool Messenger::publishAmbientTemperature(const float temperature)

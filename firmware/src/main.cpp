@@ -7,13 +7,9 @@ static Device *device;
 
 static void messageHandler(char *topic, uint8_t *payload, uint length) {
     if (device) {
-        Serial.print("Message: ");
-        Serial.print(topic);
-        Serial.print(" => ");
-        for (int i = 0; i < length; i++) {
-            Serial.print((char) payload[i]);
-        }
-        Serial.println();
+        char m[length + 1];
+        snprintf(m, length, "%s", payload);
+        Serial.printf("Received: %s => %s\n", topic, m);
 
         StaticJsonDocument<1024> message;
         deserializeJson(message, payload, length);

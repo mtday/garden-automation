@@ -13,7 +13,7 @@
 #define TOPIC_ERROR                      "error"
 #define TOPIC_CONFIG                     "config"
 #define TOPIC_HEARTBEAT                  "heartbeat"
-#define TOPIC_SENSOR_TANK_DEPTH          "sensor/tank/depth"
+#define TOPIC_SENSOR_TANK_LEVEL          "sensor/tank/level"
 #define TOPIC_SENSOR_AMBIENT_TEMPERATURE "sensor/ambient/temperature"
 #define TOPIC_SENSOR_AMBIENT_HUMIDITY    "sensor/ambient/humidity"
 #define TOPIC_SENSOR_AMBIENT_PRESSURE    "sensor/ambient/pressure"
@@ -58,7 +58,7 @@ public:
     bool publishHeartbeat();
     bool publishError(String message);
     bool publishConfigRequest();
-    bool publishTankDepth(const float depth);
+    bool publishTankLevel(const float level);
     bool publishAmbientTemperature(const float temperature);
     bool publishAmbientHumidity(const float humidity);
     bool publishAmbientPressure(const float pressure);

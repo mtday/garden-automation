@@ -7,17 +7,10 @@ class Device;
 
 
 #include "bmesensor.h"
+#include "hcsrsensor.h"
 #include "messenger.h"
 #include "ntptime.h"
 #include "wifinetwork.h"
-
-
-// device functionality
-#define FUNCTIONALITY_SENSOR_TANK_DEPTH          (1 << 0) // 1
-#define FUNCTIONALITY_SENSOR_AMBIENT_TEMPERATURE (1 << 2) // 2
-#define FUNCTIONALITY_SENSOR_AMBIENT_HUMIDITY    (1 << 3) // 4
-#define FUNCTIONALITY_SENSOR_AMBIENT_PRESSURE    (1 << 4) // 8
-#define FUNCTIONALITY_CONTROL_TANK_VALVE         (1 << 5) // 16
 
 
 class Device
@@ -30,6 +23,7 @@ private:
     Messenger *messenger;
     NTPTime *ntpTime;
     BmeSensor *bmeSensor;
+    HcsrSensor *hcsrSensor;
 
     ulong lastHeartbeat;
 
@@ -46,14 +40,13 @@ public:
     void setup();
     void loop();
 
-    bool configure(const uint8_t functionality);
+    bool configure(const uint8_t functionality, const float maxReading, const float minReading);
     uint8_t getFunctionality();
-    bool hasFunctionality(const uint8_t functionality);
 
     bool handleMessage(String topic, StaticJsonDocument<1024> message);
 
     // perform sensor readings
-    bool readTankDepth();
+    bool readTankLevel();
     bool readAmbientTemperature();
     bool readAmbientHumidity();
     bool readAmbientPressure();
