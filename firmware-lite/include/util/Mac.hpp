@@ -16,6 +16,7 @@ private:
 
 public:
     Mac();
+    Mac(const uint8_t *mac);
     Mac(uint8_t one, uint8_t two, uint8_t three, uint8_t four, uint8_t five, uint8_t six);
 
     bool operator==(const Mac& mac) const;

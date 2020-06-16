@@ -3,20 +3,13 @@
 #include "sensor/SensorHCSR.hpp"
 
 
-SensorHCSR::SensorHCSR(
-    SensorBME *sensorBME,
-    const float maxVolume,
-    const float maxReading,
-    const float minReading
-) {
+SensorHCSR::SensorHCSR(SensorBME *sensorBME) {
     SensorHCSR::sensorBME = sensorBME;
-    SensorHCSR::maxVolume = maxVolume;
-    SensorHCSR::maxReading = maxReading;
-    SensorHCSR::minReading = minReading;
 }
 
 bool SensorHCSR::setup()
 {
+    Serial.println("INFO:  Initializing HCSR sensor");
     pinMode(HCSR_TRIGGER_PIN, OUTPUT);
     pinMode(HCSR_ECHO_PIN, INPUT);
     return true;
@@ -47,7 +40,9 @@ float SensorHCSR::readVolume()
     // examples:
     // 100 - ((7 - 4) / (10 - 4) * 100) = 100 - (3 / 6 * 100) = 100 - 50   = 50.0%
     // 100 - ((9 - 4) / (10 - 4) * 100) = 100 - (5 / 6 * 100) = 100 - 83.3 = 16.7%
-    float percentFull = 100.0 - ((distance - minReading) / (maxReading - minReading) * 100.0);
+    float percentFull = 100.0 - ((distance - TANK_MIN_READING) / (TANK_MAX_READING - TANK_MIN_READING) * 100.0);
 
-    return maxVolume * percentFull;
+    float volume = TANK_MAX_VOLUME * percentFull; // gallons
+    Serial.printf("INFO:  HCSR sensor read volume: %f\n", volume);
+    return volume;
 }

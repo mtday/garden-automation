@@ -11,6 +11,15 @@ Mac::Mac()
     str = String(macstr);
 }
 
+Mac::Mac(const uint8_t *mac)
+{
+    memcpy(bytes, mac, 6);
+    char macstr[18];
+    snprintf(macstr, 18, "%02x:%02x:%02x:%02x:%02x:%02x",
+            bytes[0], bytes[1], bytes[2], bytes[3], bytes[4], bytes[5]);
+    str = String(macstr);
+}
+
 Mac::Mac(uint8_t one, uint8_t two, uint8_t three, uint8_t four, uint8_t five, uint8_t six)
 {
     bytes[0] = one;

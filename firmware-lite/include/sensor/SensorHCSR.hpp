@@ -11,17 +11,9 @@ class SensorHCSR
 {
 private:
     SensorBME *sensorBME;
-    float maxVolume;
-    float maxReading;
-    float minReading;
 
 public:
-    SensorHCSR(
-        SensorBME *sensorBME,
-        const float maxVolume,
-        const float maxReading,
-        const float minReading
-    );
+    SensorHCSR(SensorBME *sensorBME);
 
     bool setup();
     float readVolume();
