@@ -2,9 +2,8 @@
 #include <Arduino.h>
 #include <WiFi.h>
 
-#include "Device.hpp"
-#include "DeviceManager.hpp"
-#include "TankVolumeDevice.hpp"
+#include "device/Device.hpp"
+#include "device/DeviceManager.hpp"
 
 
 static Device *device;

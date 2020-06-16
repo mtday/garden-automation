@@ -1,6 +1,6 @@
 
 #include <Arduino.h>
-#include "HcsrSensor.hpp"
+#include "sensor/HcsrSensor.hpp"
 
 
 HcsrSensor::HcsrSensor(

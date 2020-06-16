@@ -1,5 +1,5 @@
 
-#include "Device.hpp"
+#include "device/Device.hpp"
 
 
 Device::Device(Mac mac)

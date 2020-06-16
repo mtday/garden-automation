@@ -1,5 +1,5 @@
 
-#include "GardenWeatherDevice.hpp"
+#include "device/GardenWeatherDevice.hpp"
 
 
 GardenWeatherDevice::GardenWeatherDevice(Mac mac) : Device(mac)

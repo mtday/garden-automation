@@ -1,15 +1,10 @@
 
-#ifndef _GARDEN_AUTOMATION_HCSR_SENSOR_H
-#define _GARDEN_AUTOMATION_HCSR_SENSOR_H
+#ifndef _GARDEN_AUTOMATION_SENSOR_HCSR_SENSOR_HPP
+#define _GARDEN_AUTOMATION_SENSOR_HCSR_SENSOR_HPP
 
 
 #include <stdint.h>
-#include "BmeSensor.hpp"
-
-using namespace std;
-
-#define HCSR_TRIGGER_PIN 11
-#define HCSR_ECHO_PIN 12
+#include "sensor/BmeSensor.hpp"
 
 
 class HcsrSensor

@@ -1,5 +1,5 @@
 
-#include "BmeSensor.hpp"
+#include "sensor/BmeSensor.hpp"
 
 
 BmeSensor::BmeSensor()

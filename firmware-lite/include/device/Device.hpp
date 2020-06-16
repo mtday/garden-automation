@@ -1,12 +1,10 @@
 
-#ifndef _GARDEN_AUTOMATION_DEVICE_H
-#define _GARDEN_AUTOMATION_DEVICE_H
+#ifndef _GARDEN_AUTOMATION_DEVICE_DEVICE_HPP
+#define _GARDEN_AUTOMATION_DEVICE_DEVICE_HPP
 
 
 #include <stdint.h>
-#include "Mac.hpp"
-
-using namespace std;
+#include "util/Mac.hpp"
 
 
 class Device

@@ -1,13 +1,9 @@
 
-#ifndef _GARDEN_AUTOMATION_BME_SENSOR_H
-#define _GARDEN_AUTOMATION_BME_SENSOR_H
+#ifndef _GARDEN_AUTOMATION_SENSOR_BME_SENSOR_HPP
+#define _GARDEN_AUTOMATION_SENSOR_BME_SENSOR_HPP
 
 
 #include <Adafruit_BME280.h>
-
-using namespace std;
-
-#define BME_SENSOR_ADDRESS 0x76
 
 
 class BmeSensor

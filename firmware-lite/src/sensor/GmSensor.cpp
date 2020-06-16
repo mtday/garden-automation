@@ -1,5 +1,5 @@
 
-#include "GmSensor.hpp"
+#include "sensor/GmSensor.hpp"
 
 
 GmSensor::GmSensor()
