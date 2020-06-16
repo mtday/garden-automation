@@ -23,6 +23,7 @@ public:
 
     uint8_t operator[](const int index) const;
 
+    const uint8_t *getAddress();
     const char *c_str();
 };
 

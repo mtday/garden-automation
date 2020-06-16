@@ -1,18 +1,18 @@
 
-#ifndef _GARDEN_AUTOMATION_SENSOR_BME_SENSOR_HPP
-#define _GARDEN_AUTOMATION_SENSOR_BME_SENSOR_HPP
+#ifndef _GARDEN_AUTOMATION_SENSOR_BME_HPP
+#define _GARDEN_AUTOMATION_SENSOR_BME_HPP
 
 
 #include <Adafruit_BME280.h>
 
 
-class BmeSensor
+class SensorBME
 {
 private:
     Adafruit_BME280 bme;
 
 public:
-    BmeSensor();
+    SensorBME();
 
     bool setup();
 

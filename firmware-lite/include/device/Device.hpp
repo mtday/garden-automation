@@ -13,12 +13,16 @@ private:
     Mac mac;
 
 public:
+    static Device *createDevice();
+
     Device(Mac mac);
 
     Mac getMac() const;
 
     virtual void setup() = 0;
     virtual void loop() = 0;
+
+    void deepSleep(const ulong seconds);
 };
 
 

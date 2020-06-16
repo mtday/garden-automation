@@ -46,6 +46,11 @@ uint8_t Mac::operator[](const int index) const
     return bytes[index];
 }
 
+const uint8_t *Mac::getAddress()
+{
+    return bytes;
+}
+
 const char *Mac::c_str()
 {
     return str.c_str();

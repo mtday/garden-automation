@@ -1,28 +1,28 @@
 
 #include <Arduino.h>
-#include "sensor/HcsrSensor.hpp"
+#include "sensor/SensorHCSR.hpp"
 
 
-HcsrSensor::HcsrSensor(
-    BmeSensor *bmeSensor,
+SensorHCSR::SensorHCSR(
+    SensorBME *sensorBME,
     const float maxVolume,
     const float maxReading,
     const float minReading
 ) {
-    HcsrSensor::bmeSensor = bmeSensor;
-    HcsrSensor::maxVolume = maxVolume;
-    HcsrSensor::maxReading = maxReading;
-    HcsrSensor::minReading = minReading;
+    SensorHCSR::sensorBME = sensorBME;
+    SensorHCSR::maxVolume = maxVolume;
+    SensorHCSR::maxReading = maxReading;
+    SensorHCSR::minReading = minReading;
 }
 
-bool HcsrSensor::setup()
+bool SensorHCSR::setup()
 {
     pinMode(HCSR_TRIGGER_PIN, OUTPUT);
     pinMode(HCSR_ECHO_PIN, INPUT);
     return true;
 }
 
-float HcsrSensor::readVolume()
+float SensorHCSR::readVolume()
 {
     // The sensor is triggered by a HIGH pulse of 10 or more microseconds. Give a short LOW pulse
     // beforehand to ensure a clean HIGH pulse:
@@ -37,8 +37,8 @@ float HcsrSensor::readVolume()
     pinMode(HCSR_ECHO_PIN, INPUT);
     const ulong duration = pulseIn(HCSR_ECHO_PIN, HIGH);
 
-    float temp = bmeSensor->readTemperature();
-    float hum = bmeSensor->readHumidity();
+    float temp = sensorBME->readTemperature();
+    float hum = sensorBME->readHumidity();
     float speedOfSound = 0.03314 + (0.606 * temp) + (0.0124 * hum);
 
     // divide by 2 since duraiton is round trip, distance in centimeters to the surface of the water

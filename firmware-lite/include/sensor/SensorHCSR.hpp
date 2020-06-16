@@ -1,23 +1,23 @@
 
-#ifndef _GARDEN_AUTOMATION_SENSOR_HCSR_SENSOR_HPP
-#define _GARDEN_AUTOMATION_SENSOR_HCSR_SENSOR_HPP
+#ifndef _GARDEN_AUTOMATION_SENSOR_HCSR_HPP
+#define _GARDEN_AUTOMATION_SENSOR_HCSR_HPP
 
 
 #include <stdint.h>
-#include "sensor/BmeSensor.hpp"
+#include "sensor/SensorBME.hpp"
 
 
-class HcsrSensor
+class SensorHCSR
 {
 private:
-    BmeSensor *bmeSensor;
+    SensorBME *sensorBME;
     float maxVolume;
     float maxReading;
     float minReading;
 
 public:
-    HcsrSensor(
-        BmeSensor *bmeSensor,
+    SensorHCSR(
+        SensorBME *sensorBME,
         const float maxVolume,
         const float maxReading,
         const float minReading
