@@ -12,6 +12,7 @@
 
 // topics
 #define TOPIC_HEARTBEAT                  "heartbeat"
+#define TOPIC_SENSOR_BATTERY_VOLTAGE     "sensor/battery/voltage"
 #define TOPIC_SENSOR_WEATHER_TEMPERATURE "sensor/weather/temperature"
 #define TOPIC_SENSOR_WEATHER_HUMIDITY    "sensor/weather/humidity"
 #define TOPIC_SENSOR_WEATHER_PRESSURE    "sensor/weather/pressure"
@@ -46,6 +47,7 @@ public:
     bool subscribe();
 
     bool publishHeartbeat();
+    bool publishBatteryVoltage(Device *source, const float voltage);
     bool publishWeatherTemperature(Device *source, const float temperature);
     bool publishWeatherHumidity(Device *source, const float humidity);
     bool publishWeatherPressure(Device *source, const float pressure);

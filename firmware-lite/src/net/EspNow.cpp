@@ -33,6 +33,14 @@ bool EspNow::setup() {
     return true;
 }
 
+bool EspNow::sendBattery(const float voltage) {
+    BatteryData battery;
+    battery.voltage = voltage;
+
+    Serial.printf("INFO:  Sending battery data message: %f\n", voltage);
+    return send(MAC_CONTROLLER, MessageTypeBattery, (uint8_t *) &battery, sizeof(battery));
+}
+
 bool EspNow::sendWeather(const float temperature, const float humidity, const float pressure, const float light) {
     WeatherData weather;
     weather.temperature = temperature;
@@ -57,7 +65,7 @@ bool EspNow::sendDripValveControl(const bool status) {
     DripValveControl dripValveControl;
     dripValveControl.status = status;
 
-    Serial.printf("INFO:  Sending tank valve control request message: %s\n", status ? "open" : "close");
+    Serial.printf("INFO:  Sending drip valve control request message: %s\n", status ? "open" : "close");
     return send(MAC_DRIP_VALVE, MessageTypeDripValveControl, (uint8_t *) &dripValveControl, sizeof(dripValveControl));
 }
 
@@ -65,7 +73,7 @@ bool EspNow::sendDripValveStatus(const bool status) {
     DripValveStatus dripValveStatus;
     dripValveStatus.status = status;
 
-    Serial.printf("INFO:  Sending tank valve status message: %s\n", status ? "opened" : "closed");
+    Serial.printf("INFO:  Sending drip valve status message: %s\n", status ? "opened" : "closed");
     return send(MAC_CONTROLLER, MessageTypeDripValveStatus, (uint8_t *) &dripValveStatus, sizeof(dripValveStatus));
 }
 
@@ -106,6 +114,17 @@ void EspNow::recv(const uint8_t *mac, const uint8_t *payload, const int size) {
     MessageType type = (MessageType) payload[0];
 
     switch (type) {
+        case MessageTypeBattery: {
+            if (sizeof(BatteryData) + 1 != size) {
+                Serial.printf("ERROR: Unexpected ESP-NOW battery data message size: %d\n", size);
+                return;
+            }
+            BatteryData battery;
+            memcpy(&battery, payload + 1, size - 1);
+            EspNow::get()->recvBattery(source, battery.voltage);
+            break;
+        }
+
         case MessageTypeWeather: {
             if (sizeof(WeatherData) + 1 != size) {
                 Serial.printf("ERROR: Unexpected ESP-NOW weather data message size: %d\n", size);
@@ -155,6 +174,11 @@ void EspNow::recv(const uint8_t *mac, const uint8_t *payload, const int size) {
             Serial.printf("ERROR: Unrecognized message type: %c", type);
             return;
     }
+}
+
+bool EspNow::recvBattery(Device *source, const float voltage) {
+    Serial.printf("INFO:  Received battery status from %s: %f\n", source->c_str(), voltage);
+    return Messenger::get()->publishBatteryVoltage(source, voltage);
 }
 
 bool EspNow::recvWeather(

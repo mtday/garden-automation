@@ -12,6 +12,7 @@ class Runner;
 #include "net/Messenger.hpp"
 #include "net/Network.hpp"
 #include "net/NTPTime.hpp"
+#include "sensor/SensorBattery.hpp"
 #include "sensor/SensorBME.hpp"
 #include "sensor/SensorGM.hpp"
 #include "sensor/SensorHCSR.hpp"
@@ -24,6 +25,7 @@ private:
     NTPTime *ntpTime;
     Messenger *messenger;
     EspNow *espNow;
+    SensorBattery *sensorBattery;
     SensorBME *sensorBME;
     SensorGM *sensorGM;
     SensorHCSR *sensorHCSR;

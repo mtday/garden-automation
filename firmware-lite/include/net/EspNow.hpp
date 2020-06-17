@@ -10,6 +10,10 @@
 
 
 typedef struct {
+    float voltage;
+} BatteryData;
+
+typedef struct {
     float temperature;
     float humidity;
     float pressure;
@@ -32,6 +36,7 @@ typedef struct {
 } DripValveStatus;
 
 enum MessageType {
+    MessageTypeBattery = 'B',
     MessageTypeWeather = 'W',
     MessageTypeTankVolume = 'V',
     MessageTypeDripValveControl = 'D',
@@ -46,11 +51,13 @@ public:
 
     bool setup();
 
+    bool sendBattery(const float voltage);
     bool sendWeather(const float temperature, const float humidity, const float pressure, const float light);
     bool sendTankVolume(const float volume);
     bool sendDripValveStatus(const bool status);
     bool sendDripValveControl(const bool status);
 
+    bool recvBattery(Device *source, const float voltage);
     bool recvWeather(Device *source, const float temperature, const float humidity, const float pressure, const float light);
     bool recvTankVolume(Device *source, const float volume);
     bool recvDripValveStatus(Device *source, const bool status);

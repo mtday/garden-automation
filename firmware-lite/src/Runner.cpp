@@ -12,15 +12,32 @@ Runner::Runner() {
             network = Network::get();
             ntpTime = NTPTime::get();
             messenger = Messenger::get();
+            sensorBattery = NULL;
+            sensorBME = NULL;
+            sensorGM = NULL;
             break;
         case DeviceTypeWeather:
+            network = NULL;
+            ntpTime = NULL;
+            messenger = NULL;
+            sensorBattery = SensorBattery::get();
             sensorBME = SensorBME::get();
             sensorGM = SensorGM::get();
             break;
         case DeviceTypeTankVolume:
+            network = NULL;
+            ntpTime = NULL;
+            messenger = NULL;
+            sensorBattery = SensorBattery::get();
             sensorBME = SensorBME::get();
             sensorHCSR = SensorHCSR::get();
         case DeviceTypeDripValve:
+            network = NULL;
+            ntpTime = NULL;
+            messenger = NULL;
+            sensorBattery = SensorBattery::get();
+            sensorBME = NULL;
+            sensorHCSR = NULL;
             break;
     }
 }
@@ -43,6 +60,9 @@ bool Runner::setup() {
     if (espNow && !espNow->setup()) {
         return false;
     }
+    if (sensorBattery && !sensorBattery->setup()) {
+        return false;
+    }
     if (sensorBME && !sensorBME->setup()) {
         return false;
     }
@@ -61,6 +81,10 @@ bool Runner::setup() {
 
         case DeviceTypeWeather: {
             Serial.println("INFO:  Running weather setup");
+            const float voltage = sensorBattery->readVoltage();
+            if (!espNow->sendBattery(voltage)) {
+                return false;
+            }
             const float temperature = sensorBME->readTemperature();
             const float humidity = sensorBME->readHumidity();
             const float pressure = sensorBME->readPressure();
@@ -74,6 +98,10 @@ bool Runner::setup() {
 
         case DeviceTypeTankVolume: {
             Serial.println("INFO:  Running tank volume setup");
+            const float voltage = sensorBattery->readVoltage();
+            if (!espNow->sendBattery(voltage)) {
+                return false;
+            }
             const float volume = sensorHCSR->readVolume();
             if (!espNow->sendTankVolume(volume)) {
                 return false;
@@ -84,6 +112,10 @@ bool Runner::setup() {
 
         case DeviceTypeDripValve: {
             Serial.println("INFO:  Running drip valve setup");
+            const float voltage = sensorBattery->readVoltage();
+            if (!espNow->sendBattery(voltage)) {
+                return false;
+            }
             return true;
         }
 

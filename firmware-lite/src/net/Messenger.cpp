@@ -105,6 +105,15 @@ bool Messenger::publishHeartbeat() {
     return publish(String(TOPIC_HEARTBEAT), message);
 }
 
+bool Messenger::publishBatteryVoltage(Device *source, const float voltage) {
+    StaticJsonDocument<1024> message;
+    message["source"] = source->getMac().c_str();
+    message["timestamp"] = NTPTime::get()->now();
+    message["voltage"] = voltage;
+    message["unit"] = "percent";
+    return publish(String(TOPIC_SENSOR_BATTERY_VOLTAGE), message);
+}
+
 bool Messenger::publishWeatherTemperature(Device *source, const float temperature) {
     StaticJsonDocument<1024> message;
     message["source"] = source->getMac().c_str();
