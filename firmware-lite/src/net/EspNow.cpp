@@ -1,5 +1,5 @@
 
-#include "Device.hpp"
+#include "Runner.hpp"
 #include "net/EspNow.hpp"
 
 
@@ -167,7 +167,7 @@ bool EspNow::recvWeather(
 ) {
     Serial.printf("INFO:  Received weather from %s: %f, %f, %f, %f\n",
             source.c_str(), temperature, humidity, pressure, light);
-    if (Device::get()->getType() == Controller) {
+    if (Runner::get()->getType() == Controller) {
         return Messenger::get()->publishWeatherTemperature(source, temperature)
                 && Messenger::get()->publishWeatherHumidity(source, humidity)
                 && Messenger::get()->publishWeatherPressure(source, pressure)
@@ -181,7 +181,7 @@ bool EspNow::recvWeather(
 bool EspNow::recvTankVolume(Mac source, const float volume)
 {
     Serial.printf("INFO:  Received tank volume from %s: %f\n", source.c_str(), volume);
-    if (Device::get()->getType() == Controller) {
+    if (Runner::get()->getType() == Controller) {
         return Messenger::get()->publishTankVolume(source, volume);
     } else {
         Serial.println("ERROR: Unexpectedly received tank volume data message");
@@ -192,7 +192,7 @@ bool EspNow::recvTankVolume(Mac source, const float volume)
 bool EspNow::recvTankValveControl(Mac source, const bool status)
 {
     Serial.printf("INFO:  Received tank valve control from %s: %s\n", source.c_str(), status ? "open" : "close");
-    if (Device::get()->getType() == TankValve) {
+    if (Runner::get()->getType() == TankValve) {
         // TODO: control the valve
         return EspNow::get()->sendTankValveStatus(status);
     } else {
@@ -204,7 +204,7 @@ bool EspNow::recvTankValveControl(Mac source, const bool status)
 bool EspNow::recvTankValveStatus(Mac source, const bool status)
 {
     Serial.printf("INFO:  Received tank valve status from %s: %s\n", source.c_str(), status ? "opened" : "closed");
-    if (Device::get()->getType() == Controller) {
+    if (Runner::get()->getType() == Controller) {
         return Messenger::get()->publishTankValveStatus(source, status);
     } else {
         Serial.println("ERROR: Unexpectedly received tank valve control message");

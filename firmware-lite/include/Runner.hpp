@@ -1,9 +1,9 @@
 
-#ifndef _GARDEN_AUTOMATION_DEVICE_HPP
-#define _GARDEN_AUTOMATION_DEVICE_HPP
+#ifndef _GARDEN_AUTOMATION_RUNNER_HPP
+#define _GARDEN_AUTOMATION_RUNNER_HPP
 
 
-class Device;
+class Runner;
 
 
 #include <stdint.h>
@@ -26,7 +26,7 @@ enum DeviceType
 };
 
 
-class Device
+class Runner
 {
 private:
     Mac mac;
@@ -41,8 +41,8 @@ private:
     SensorHCSR *sensorHCSR;
 
 public:
-    Device(Mac mac, DeviceType type);
-    static Device *get();
+    Runner(Mac mac, DeviceType type);
+    static Runner *get();
 
     Mac getMac() const;
     DeviceType getType() const;

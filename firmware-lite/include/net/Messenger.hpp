@@ -3,14 +3,11 @@
 #define _GARDEN_AUTOMATION_NET_MESSENGER_HPP
 
 
-class Messenger;
-
-
 #include <ArduinoJson.h>
 #include <PubSubClient.h>
-#include "Device.hpp"
 #include "net/Network.hpp"
 #include "net/NTPTime.hpp"
+#include "util/Mac.hpp"
 
 
 // topics

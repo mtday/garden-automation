@@ -1,15 +1,15 @@
 
-#include "Device.hpp"
+#include "Runner.hpp"
 
 
-static Device *device;
+static Runner *runner;
 
 
-Device::Device(Mac mac, DeviceType type)
+Runner::Runner(Mac mac, DeviceType type)
 {
-    Device::mac = mac;
-    Device::type = type;
-    Serial.printf("INFO:  Device type %c has mac %s\n", type, mac.c_str());
+    Runner::mac = mac;
+    Runner::type = type;
+    Serial.printf("INFO:  Runner type %c has mac %s\n", type, mac.c_str());
 
     espNow = new EspNow();
     switch (type) {
@@ -30,10 +30,10 @@ Device::Device(Mac mac, DeviceType type)
     }
 }
 
-Device *Device::get()
+Runner *Runner::get()
 {
-    if (device) {
-        return device;
+    if (runner) {
+        return runner;
     }
 
     Mac mac;
@@ -47,23 +47,23 @@ Device *Device::get()
     } else {
         type = TankVolume;
     }
-    device = new Device(mac, type);
-    return device;
+    runner = new Runner(mac, type);
+    return runner;
 }
 
-Mac Device::getMac() const
+Mac Runner::getMac() const
 {
     return mac;
 }
 
-DeviceType Device::getType() const
+DeviceType Runner::getType() const
 {
     return type;
 }
 
-bool Device::setup()
+bool Runner::setup()
 {
-    Serial.println("INFO:  Initializing device");
+    Serial.println("INFO:  Initializing runner");
     if (network && !network->setup()) {
         return false;
     }
@@ -85,12 +85,12 @@ bool Device::setup()
 
     switch (type) {
         case Controller: {
-            Serial.println("INFO:  Running controller device setup");
+            Serial.println("INFO:  Running controller setup");
             return true;
         }
 
         case Weather: {
-            Serial.println("INFO:  Running weather device setup");
+            Serial.println("INFO:  Running weather setup");
             const float temperature = sensorBME->readTemperature();
             const float humidity = sensorBME->readHumidity();
             const float pressure = sensorBME->readPressure();
@@ -103,7 +103,7 @@ bool Device::setup()
         }
 
         case TankVolume: {
-            Serial.println("INFO:  Running tank volume device setup");
+            Serial.println("INFO:  Running tank volume setup");
             const float volume = sensorHCSR->readVolume();
             if (!espNow->sendTankVolume(volume)) {
                 return false;
@@ -113,7 +113,7 @@ bool Device::setup()
         }
 
         case TankValve: {
-            Serial.println("INFO:  Running tank valve device setup");
+            Serial.println("INFO:  Running tank valve setup");
             return true;
         }
 
@@ -123,7 +123,7 @@ bool Device::setup()
     }
 }
 
-bool Device::loop()
+bool Runner::loop()
 {
     if (network && !network->loop()) {
         return false;
@@ -134,7 +134,7 @@ bool Device::loop()
     return true;
 }
 
-void Device::deepSleep(const ulong seconds)
+void Runner::deepSleep(const ulong seconds)
 {
     const ulong microseconds = seconds * 1000 * 1000;
     esp_sleep_enable_timer_wakeup(microseconds);
@@ -144,7 +144,7 @@ void Device::deepSleep(const ulong seconds)
     esp_deep_sleep_start();
 }
 
-void Device::restart()
+void Runner::restart()
 {
     Serial.println("INFO:  Restarting");
     esp_restart();

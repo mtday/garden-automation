@@ -3,6 +3,7 @@
 #include <ArduinoJson.h>
 #include <Ethernet.h>
 #include <PubSubClient.h>
+#include "net/EspNow.hpp"
 #include "net/Messenger.hpp"
 
 
