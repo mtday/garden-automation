@@ -1,38 +1,26 @@
 
 #include <Arduino.h>
-#include "device.h"
+#include <WiFi.h>
+
+#include "Device.hpp"
+#include "Runner.hpp"
 
 
-static Device *device;
+void setup() {
+    Serial.begin(SERIAL_BAUD);
+    Serial.printf("INFO:  %s\n", Device::get()->c_str());
 
-static void messageHandler(char *topic, uint8_t *payload, uint length) {
-    if (device) {
-        char m[length + 1];
-        snprintf(m, length, "%s", payload);
-        Serial.printf("Received: %s => %s\n", topic, m);
-
-        StaticJsonDocument<1024> message;
-        deserializeJson(message, payload, length);
-
-        if (!device->handleMessage(topic, message)) {
-            Serial.println("Failed to handle message");
-        }
+    if (!Runner::get()->setup()) {
+        Serial.println("ERROR: Restarting due to setup failure");
+        delay(3000);
+        Runner::get()->restart();
     }
 }
 
-void setup() {
-    device = new Device(
-        WIFI_SSID,
-        WIFI_PASSWORD,
-        WIFI_CONNECT_TIMEOUT,
-        MQTT_BROKER_IP,
-        MQTT_BROKER_PORT,
-        messageHandler
-    );
-
-    device->setup();
-}
-
 void loop() {
-    device->loop();
+    if (!Runner::get()->loop()) {
+        Serial.println("ERROR: Restarting due to loop failure");
+        delay(3000);
+        Runner::get()->restart();
+    }
 }
