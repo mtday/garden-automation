@@ -51,6 +51,13 @@ bool Messenger::loop() {
         Serial.println("ERROR: Failed to reconnect to MQTT broker");
         return false;
     }
+
+    const ulong now = millis();
+    if (now - lastHeartbeat > HEARTBEAT_INTERVAL) {
+        publishHeartbeat();
+        lastHeartbeat = now;
+    }
+
     return mqttClient.loop();
 }
 
@@ -77,7 +84,6 @@ bool Messenger::handleMessage(String topic, StaticJsonDocument<1024> message) {
         return EspNow::get()->sendDripValveControl(message["status"]);
     } else {
         Serial.printf("ERROR: Received message on unsupported topic: %s\n", topic.c_str());
-        publishError(String("ERROR: Received message on unsupported topic: ") + topic);
         return false;
     }
 }
@@ -97,13 +103,6 @@ bool Messenger::publishHeartbeat() {
     StaticJsonDocument<1024> message;
     message["timestamp"] = NTPTime::get()->now();
     return publish(String(TOPIC_HEARTBEAT), message);
-}
-
-bool Messenger::publishError(String error) {
-    StaticJsonDocument<1024> message;
-    message["timestamp"] = NTPTime::get()->now();
-    message["error"] = error;
-    return publish(String(TOPIC_ERROR), message);
 }
 
 bool Messenger::publishWeatherTemperature(Device *source, const float temperature) {

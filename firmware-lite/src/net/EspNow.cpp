@@ -106,7 +106,7 @@ void EspNow::recv(const uint8_t *mac, const uint8_t *payload, const int size) {
     MessageType type = (MessageType) payload[0];
 
     switch (type) {
-        case MessageTypeWeather:
+        case MessageTypeWeather: {
             if (sizeof(WeatherData) + 1 != size) {
                 Serial.printf("ERROR: Unexpected ESP-NOW weather data message size: %d\n", size);
                 return;
@@ -116,7 +116,9 @@ void EspNow::recv(const uint8_t *mac, const uint8_t *payload, const int size) {
             EspNow::get()->recvWeather(
                     source, weather.temperature, weather.humidity, weather.pressure, weather.light);
             break;
-        case MessageTypeTankVolume: // tank volume
+        }
+
+        case MessageTypeTankVolume: {
             if (sizeof(TankVolumeData) + 1 != size) {
                 Serial.printf("ERROR: Unexpected ESP-NOW tank volume data message size: %d\n", size);
                 return;
@@ -125,7 +127,9 @@ void EspNow::recv(const uint8_t *mac, const uint8_t *payload, const int size) {
             memcpy(&tankVolume, payload + 1, size - 1);
             EspNow::get()->recvTankVolume(source, tankVolume.volume);
             break;
-        case MessageTypeDripValveControl: // drip valve control
+        }
+
+        case MessageTypeDripValveControl: {
             if (sizeof(DripValveControl) + 1 != size) {
                 Serial.printf("ERROR: Unexpected ESP-NOW drip valve control message size: %d\n", size);
                 return;
@@ -134,7 +138,9 @@ void EspNow::recv(const uint8_t *mac, const uint8_t *payload, const int size) {
             memcpy(&dripValveControl, payload + 1, size - 1);
             EspNow::get()->recvDripValveControl(source, dripValveControl.status);
             break;
-        case MessageTypeDripValveStatus: // drip valve status
+        }
+
+        case MessageTypeDripValveStatus: {
             if (sizeof(DripValveStatus) + 1 != size) {
                 Serial.printf("ERROR: Unexpected ESP-NOW drip valve status message size: %d\n", size);
                 return;
@@ -143,6 +149,8 @@ void EspNow::recv(const uint8_t *mac, const uint8_t *payload, const int size) {
             memcpy(&dripValveStatus, payload + 1, size - 1);
             EspNow::get()->recvDripValveStatus(source, dripValveStatus.status);
             break;
+        }
+
         default:
             Serial.printf("ERROR: Unrecognized message type: %c", type);
             return;

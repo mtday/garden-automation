@@ -11,7 +11,6 @@
 
 
 // topics
-#define TOPIC_ERROR                      "error"
 #define TOPIC_HEARTBEAT                  "heartbeat"
 #define TOPIC_SENSOR_WEATHER_TEMPERATURE "sensor/weather/temperature"
 #define TOPIC_SENSOR_WEATHER_HUMIDITY    "sensor/weather/humidity"
@@ -25,6 +24,7 @@
 class Messenger {
 private:
     PubSubClient mqttClient;
+    ulong lastHeartbeat;
 
 protected:
     bool isConnected();
@@ -46,7 +46,6 @@ public:
     bool subscribe();
 
     bool publishHeartbeat();
-    bool publishError(String message);
     bool publishWeatherTemperature(Device *source, const float temperature);
     bool publishWeatherHumidity(Device *source, const float humidity);
     bool publishWeatherPressure(Device *source, const float pressure);
