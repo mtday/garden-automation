@@ -7,8 +7,7 @@
 #include <IPAddress.h>
 
 
-class Network
-{
+class Network {
 private:
     IPAddress ip;
 

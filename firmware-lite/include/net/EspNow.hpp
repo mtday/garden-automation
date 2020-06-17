@@ -5,11 +5,11 @@
 
 #include <esp_now.h>
 #include <stdint.h>
+#include "Device.hpp"
 #include "util/Mac.hpp"
 
 
-typedef struct
-{
+typedef struct {
     float temperature;
     float humidity;
     float pressure;
@@ -17,26 +17,29 @@ typedef struct
 } WeatherData;
 
 
-typedef struct
-{
+typedef struct {
     float volume;
 } TankVolumeData;
 
 
-typedef struct
-{
+typedef struct {
     bool status;
-} TankValveControl;
+} DripValveControl;
 
 
-typedef struct
-{
+typedef struct {
     bool status;
-} TankValveStatus;
+} DripValveStatus;
+
+enum MessageType {
+    MessageTypeWeather = 'W',
+    MessageTypeTankVolume = 'V',
+    MessageTypeDripValveControl = 'D',
+    MessageTypeDripValveStatus = 'S',
+};
 
 
-class EspNow
-{
+class EspNow {
 public:
     EspNow();
     static EspNow *get();
@@ -45,16 +48,16 @@ public:
 
     bool sendWeather(const float temperature, const float humidity, const float pressure, const float light);
     bool sendTankVolume(const float volume);
-    bool sendTankValveStatus(const bool status);
-    bool sendTankValveControl(const bool status);
+    bool sendDripValveStatus(const bool status);
+    bool sendDripValveControl(const bool status);
 
-    bool recvWeather(Mac source, const float temperature, const float humidity, const float pressure, const float light);
-    bool recvTankVolume(Mac source, const float volume);
-    bool recvTankValveStatus(Mac source, const bool status);
-    bool recvTankValveControl(Mac source, const bool status);
+    bool recvWeather(Device *source, const float temperature, const float humidity, const float pressure, const float light);
+    bool recvTankVolume(Device *source, const float volume);
+    bool recvDripValveStatus(Device *source, const bool status);
+    bool recvDripValveControl(Device *source, const bool status);
 
 protected:
-    static bool send(Mac receiver, const uint8_t type, const uint8_t *payload, const uint8_t size);
+    static bool send(Mac receiver, const MessageType type, const uint8_t *payload, const uint8_t size);
     static void recv(const uint8_t *mac, const uint8_t *payload, const int size);
 };
 

@@ -6,8 +6,7 @@
 #include <time.h>
 
 
-class NTPTime
-{
+class NTPTime {
 public:
     NTPTime();
     static NTPTime *get();

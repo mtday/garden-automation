@@ -5,64 +5,34 @@
 static Runner *runner;
 
 
-Runner::Runner(Mac mac, DeviceType type)
-{
-    Runner::mac = mac;
-    Runner::type = type;
-    Serial.printf("INFO:  Runner type %c has mac %s\n", type, mac.c_str());
-
+Runner::Runner() {
     espNow = new EspNow();
-    switch (type) {
-        case Controller:
+    switch (Device::get()->getType()) {
+        case DeviceTypeController:
             network = Network::get();
             ntpTime = NTPTime::get();
             messenger = Messenger::get();
             break;
-        case Weather:
+        case DeviceTypeWeather:
             sensorBME = SensorBME::get();
             sensorGM = SensorGM::get();
             break;
-        case TankVolume:
+        case DeviceTypeTankVolume:
             sensorBME = SensorBME::get();
             sensorHCSR = SensorHCSR::get();
-        case TankValve:
+        case DeviceTypeDripValve:
             break;
     }
 }
 
-Runner *Runner::get()
-{
-    if (runner) {
-        return runner;
+Runner *Runner::get() {
+    if (!runner) {
+        runner = new Runner();
     }
-
-    Mac mac;
-    DeviceType type;
-    if (mac == DEVICE_AUTOMATION_CONTROL) {
-        type = Controller;
-    } else if (mac == DEVICE_GARDEN_WEATHER) {
-        type = Weather;
-    } else if (mac == DEVICE_TANK_VALVE) {
-        type = TankValve;
-    } else {
-        type = TankVolume;
-    }
-    runner = new Runner(mac, type);
     return runner;
 }
 
-Mac Runner::getMac() const
-{
-    return mac;
-}
-
-DeviceType Runner::getType() const
-{
-    return type;
-}
-
-bool Runner::setup()
-{
+bool Runner::setup() {
     Serial.println("INFO:  Initializing runner");
     if (network && !network->setup()) {
         return false;
@@ -83,13 +53,13 @@ bool Runner::setup()
         return false;
     }
 
-    switch (type) {
-        case Controller: {
+    switch (Device::get()->getType()) {
+        case DeviceTypeController: {
             Serial.println("INFO:  Running controller setup");
             return true;
         }
 
-        case Weather: {
+        case DeviceTypeWeather: {
             Serial.println("INFO:  Running weather setup");
             const float temperature = sensorBME->readTemperature();
             const float humidity = sensorBME->readHumidity();
@@ -102,7 +72,7 @@ bool Runner::setup()
             return true;
         }
 
-        case TankVolume: {
+        case DeviceTypeTankVolume: {
             Serial.println("INFO:  Running tank volume setup");
             const float volume = sensorHCSR->readVolume();
             if (!espNow->sendTankVolume(volume)) {
@@ -112,19 +82,18 @@ bool Runner::setup()
             return true;
         }
 
-        case TankValve: {
-            Serial.println("INFO:  Running tank valve setup");
+        case DeviceTypeDripValve: {
+            Serial.println("INFO:  Running drip valve setup");
             return true;
         }
 
         default:
-            Serial.printf("ERROR: Unsupported device type: %c\n", type);
+            Serial.printf("ERROR: Unsupported device type: %c\n", Device::get()->getType());
             return false;
     }
 }
 
-bool Runner::loop()
-{
+bool Runner::loop() {
     if (network && !network->loop()) {
         return false;
     }
@@ -134,8 +103,7 @@ bool Runner::loop()
     return true;
 }
 
-void Runner::deepSleep(const ulong seconds)
-{
+void Runner::deepSleep(const ulong seconds) {
     const ulong microseconds = seconds * 1000 * 1000;
     esp_sleep_enable_timer_wakeup(microseconds);
 
@@ -144,8 +112,7 @@ void Runner::deepSleep(const ulong seconds)
     esp_deep_sleep_start();
 }
 
-void Runner::restart()
-{
+void Runner::restart() {
     Serial.println("INFO:  Restarting");
     esp_restart();
 }

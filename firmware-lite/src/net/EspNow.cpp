@@ -5,9 +5,7 @@
 
 static EspNow *espNow;
 
-
-EspNow::EspNow()
-{
+EspNow::EspNow() {
 }
 
 EspNow *EspNow::get() {
@@ -17,8 +15,7 @@ EspNow *EspNow::get() {
     return espNow;
 }
 
-bool EspNow::setup()
-{
+bool EspNow::setup() {
     Serial.println("INFO:  Initializing ESP-NOW");
     WiFi.mode(WIFI_MODE_STA);
     WiFi.channel(ESPNOW_CHANNEL);
@@ -36,8 +33,7 @@ bool EspNow::setup()
     return true;
 }
 
-bool EspNow::sendWeather(const float temperature, const float humidity, const float pressure, const float light)
-{
+bool EspNow::sendWeather(const float temperature, const float humidity, const float pressure, const float light) {
     WeatherData weather;
     weather.temperature = temperature;
     weather.humidity = humidity;
@@ -46,38 +42,34 @@ bool EspNow::sendWeather(const float temperature, const float humidity, const fl
 
     Serial.printf("INFO:  Sending weather data message: %f, %f, %f, %f\n",
             temperature, humidity, pressure, light);
-    return send(DEVICE_AUTOMATION_CONTROL, 'W', (uint8_t *) &weather, sizeof(weather));
+    return send(MAC_CONTROLLER, MessageTypeWeather, (uint8_t *) &weather, sizeof(weather));
 }
 
-bool EspNow::sendTankVolume(const float volume)
-{
+bool EspNow::sendTankVolume(const float volume) {
     TankVolumeData tankVolume;
     tankVolume.volume = volume;
 
     Serial.printf("INFO:  Sending tank volume data message: %f\n", volume);
-    return send(DEVICE_AUTOMATION_CONTROL, 'V', (uint8_t *) &tankVolume, sizeof(tankVolume));
+    return send(MAC_CONTROLLER, MessageTypeTankVolume, (uint8_t *) &tankVolume, sizeof(tankVolume));
 }
 
-bool EspNow::sendTankValveControl(const bool status)
-{
-    TankValveControl tankValveControl;
-    tankValveControl.status = status;
+bool EspNow::sendDripValveControl(const bool status) {
+    DripValveControl dripValveControl;
+    dripValveControl.status = status;
 
     Serial.printf("INFO:  Sending tank valve control request message: %s\n", status ? "open" : "close");
-    return send(DEVICE_TANK_VALVE, 'C', (uint8_t *) &tankValveControl, sizeof(tankValveControl));
+    return send(MAC_DRIP_VALVE, MessageTypeDripValveControl, (uint8_t *) &dripValveControl, sizeof(dripValveControl));
 }
 
-bool EspNow::sendTankValveStatus(const bool status)
-{
-    TankValveControl tankValveControl;
-    tankValveControl.status = status;
+bool EspNow::sendDripValveStatus(const bool status) {
+    DripValveStatus dripValveStatus;
+    dripValveStatus.status = status;
 
     Serial.printf("INFO:  Sending tank valve status message: %s\n", status ? "opened" : "closed");
-    return send(DEVICE_AUTOMATION_CONTROL, 'S', (uint8_t *) &tankValveControl, sizeof(tankValveControl));
+    return send(MAC_CONTROLLER, MessageTypeDripValveStatus, (uint8_t *) &dripValveStatus, sizeof(dripValveStatus));
 }
 
-bool EspNow::send(Mac receiver, const uint8_t type, const uint8_t *payload, const uint8_t length)
-{
+bool EspNow::send(Mac receiver, const MessageType type, const uint8_t *payload, const uint8_t length) {
     if (length + 1 > 250) {
         Serial.printf("ERROR: Message is too big for ESP-NOW: %d\n", length + 1);
         return false;
@@ -104,18 +96,17 @@ bool EspNow::send(Mac receiver, const uint8_t type, const uint8_t *payload, cons
     return true;
 }
 
-void EspNow::recv(const uint8_t *mac, const uint8_t *payload, const int size)
-{
+void EspNow::recv(const uint8_t *mac, const uint8_t *payload, const int size) {
     if (size == 0) {
         Serial.println("ERROR: Unexpected empty ESP-NOW message");
         return;
     }
 
-    Mac source(mac);
-    const uint8_t type = payload[0];
+    Device *source = Device::get(Mac(mac));
+    MessageType type = (MessageType) payload[0];
 
     switch (type) {
-        case 'W': // weather
+        case MessageTypeWeather:
             if (sizeof(WeatherData) + 1 != size) {
                 Serial.printf("ERROR: Unexpected ESP-NOW weather data message size: %d\n", size);
                 return;
@@ -125,7 +116,7 @@ void EspNow::recv(const uint8_t *mac, const uint8_t *payload, const int size)
             EspNow::get()->recvWeather(
                     source, weather.temperature, weather.humidity, weather.pressure, weather.light);
             break;
-        case 'V': // tank volume
+        case MessageTypeTankVolume: // tank volume
             if (sizeof(TankVolumeData) + 1 != size) {
                 Serial.printf("ERROR: Unexpected ESP-NOW tank volume data message size: %d\n", size);
                 return;
@@ -134,23 +125,23 @@ void EspNow::recv(const uint8_t *mac, const uint8_t *payload, const int size)
             memcpy(&tankVolume, payload + 1, size - 1);
             EspNow::get()->recvTankVolume(source, tankVolume.volume);
             break;
-        case 'C': // valve control
-            if (sizeof(TankValveControl) + 1 != size) {
-                Serial.printf("ERROR: Unexpected ESP-NOW tank valve control message size: %d\n", size);
+        case MessageTypeDripValveControl: // drip valve control
+            if (sizeof(DripValveControl) + 1 != size) {
+                Serial.printf("ERROR: Unexpected ESP-NOW drip valve control message size: %d\n", size);
                 return;
             }
-            TankValveControl tankValveControl;
-            memcpy(&tankValveControl, payload + 1, size - 1);
-            EspNow::get()->recvTankValveControl(source, tankValveControl.status);
+            DripValveControl dripValveControl;
+            memcpy(&dripValveControl, payload + 1, size - 1);
+            EspNow::get()->recvDripValveControl(source, dripValveControl.status);
             break;
-        case 'S': // valve status
-            if (sizeof(TankValveStatus) + 1 != size) {
-                Serial.printf("ERROR: Unexpected ESP-NOW tank valve status message size: %d\n", size);
+        case MessageTypeDripValveStatus: // drip valve status
+            if (sizeof(DripValveStatus) + 1 != size) {
+                Serial.printf("ERROR: Unexpected ESP-NOW drip valve status message size: %d\n", size);
                 return;
             }
-            TankValveStatus tankValveStatus;
-            memcpy(&tankValveStatus, payload + 1, size - 1);
-            EspNow::get()->recvTankValveStatus(source, tankValveStatus.status);
+            DripValveStatus dripValveStatus;
+            memcpy(&dripValveStatus, payload + 1, size - 1);
+            EspNow::get()->recvDripValveStatus(source, dripValveStatus.status);
             break;
         default:
             Serial.printf("ERROR: Unrecognized message type: %c", type);
@@ -159,55 +150,33 @@ void EspNow::recv(const uint8_t *mac, const uint8_t *payload, const int size)
 }
 
 bool EspNow::recvWeather(
-    Mac source,
+    Device *source,
     const float temperature,
     const float humidity,
     const float pressure,
     const float light
 ) {
     Serial.printf("INFO:  Received weather from %s: %f, %f, %f, %f\n",
-            source.c_str(), temperature, humidity, pressure, light);
-    if (Runner::get()->getType() == Controller) {
-        return Messenger::get()->publishWeatherTemperature(source, temperature)
-                && Messenger::get()->publishWeatherHumidity(source, humidity)
-                && Messenger::get()->publishWeatherPressure(source, pressure)
-                && Messenger::get()->publishWeatherLight(source, light);
-    } else {
-        Serial.println("ERROR: Unexpectedly received weather data message");
-        return false;
-    }
+            source->c_str(), temperature, humidity, pressure, light);
+    return Messenger::get()->publishWeatherTemperature(source, temperature)
+            && Messenger::get()->publishWeatherHumidity(source, humidity)
+            && Messenger::get()->publishWeatherPressure(source, pressure)
+            && Messenger::get()->publishWeatherLight(source, light);
 }
 
-bool EspNow::recvTankVolume(Mac source, const float volume)
-{
-    Serial.printf("INFO:  Received tank volume from %s: %f\n", source.c_str(), volume);
-    if (Runner::get()->getType() == Controller) {
-        return Messenger::get()->publishTankVolume(source, volume);
-    } else {
-        Serial.println("ERROR: Unexpectedly received tank volume data message");
-        return false;
-    }
+bool EspNow::recvTankVolume(Device *source, const float volume) {
+    Serial.printf("INFO:  Received tank volume from %s: %f\n", source->c_str(), volume);
+    return Messenger::get()->publishTankVolume(source, volume);
 }
 
-bool EspNow::recvTankValveControl(Mac source, const bool status)
+bool EspNow::recvDripValveStatus(Device *source, const bool status)
 {
-    Serial.printf("INFO:  Received tank valve control from %s: %s\n", source.c_str(), status ? "open" : "close");
-    if (Runner::get()->getType() == TankValve) {
-        // TODO: control the valve
-        return EspNow::get()->sendTankValveStatus(status);
-    } else {
-        Serial.println("ERROR: Unexpectedly received tank valve control message");
-        return false;
-    }
+    Serial.printf("INFO:  Received drip valve status from %s: %s\n", source->c_str(), status ? "opened" : "closed");
+    return Messenger::get()->publishDripValveStatus(source, status);
 }
 
-bool EspNow::recvTankValveStatus(Mac source, const bool status)
-{
-    Serial.printf("INFO:  Received tank valve status from %s: %s\n", source.c_str(), status ? "opened" : "closed");
-    if (Runner::get()->getType() == Controller) {
-        return Messenger::get()->publishTankValveStatus(source, status);
-    } else {
-        Serial.println("ERROR: Unexpectedly received tank valve control message");
-        return false;
-    }
+bool EspNow::recvDripValveControl(Device *source, const bool status) {
+    Serial.printf("INFO:  Received drip valve control from %s: %s\n", source->c_str(), status ? "open" : "close");
+    // TODO: control the valve
+    return EspNow::get()->sendDripValveStatus(status);
 }

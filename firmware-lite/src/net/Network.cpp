@@ -7,44 +7,36 @@
 
 static Network *network;
 
-
-Network::Network()
-{
+Network::Network() {
 }
 
-Network *Network::get()
-{
+Network *Network::get() {
     if (!network) {
         network = new Network();
     }
     return network;
 }
 
-IPAddress Network::getIp()
-{
+IPAddress Network::getIp() {
     return ip;
 }
 
-bool Network::setup()
-{
+bool Network::setup() {
     return connect();
 }
 
-bool Network::loop()
-{
+bool Network::loop() {
     if (!isConnected()) {
         return connect();
     }
     return true;
 }
 
-bool Network::isConnected()
-{
+bool Network::isConnected() {
     return WiFi.status() == WL_CONNECTED;
 }
 
-bool Network::connect()
-{
+bool Network::connect() {
     if (isConnected()) {
         return true;
     }

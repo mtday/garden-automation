@@ -5,28 +5,24 @@
 static SensorHCSR *sensorHCSR;
 
 
-SensorHCSR::SensorHCSR()
-{
+SensorHCSR::SensorHCSR() {
 }
 
-SensorHCSR *SensorHCSR::get()
-{
+SensorHCSR *SensorHCSR::get() {
     if (!sensorHCSR) {
         sensorHCSR = new SensorHCSR();
     }
     return sensorHCSR;
 }
 
-bool SensorHCSR::setup()
-{
+bool SensorHCSR::setup() {
     Serial.println("INFO:  Initializing HCSR sensor");
     pinMode(HCSR_TRIGGER_PIN, OUTPUT);
     pinMode(HCSR_ECHO_PIN, INPUT);
     return true;
 }
 
-float SensorHCSR::readVolume()
-{
+float SensorHCSR::readVolume() {
     // The sensor is triggered by a HIGH pulse of 10 or more microseconds. Give a short LOW pulse
     // beforehand to ensure a clean HIGH pulse:
     digitalWrite(HCSR_TRIGGER_PIN, LOW);

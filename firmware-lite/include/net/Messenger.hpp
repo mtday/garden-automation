@@ -18,12 +18,11 @@
 #define TOPIC_SENSOR_WEATHER_PRESSURE    "sensor/weather/pressure"
 #define TOPIC_SENSOR_WEATHER_LIGHT       "sensor/weather/light"
 #define TOPIC_SENSOR_TANK_VOLUME         "sensor/tank/volume"
-#define TOPIC_CONTROL_TANK_VALVE         "control/tank/valve"
-#define TOPIC_STATUS_TANK_VALVE          "status/tank/valve"
+#define TOPIC_CONTROL_DRIP_VALVE         "control/drip/valve"
+#define TOPIC_STATUS_DRIP_VALVE          "status/drip/valve"
 
 
-class Messenger
-{
+class Messenger {
 private:
     PubSubClient mqttClient;
 
@@ -48,12 +47,12 @@ public:
 
     bool publishHeartbeat();
     bool publishError(String message);
-    bool publishWeatherTemperature(Mac source, const float temperature);
-    bool publishWeatherHumidity(Mac source, const float humidity);
-    bool publishWeatherPressure(Mac source, const float pressure);
-    bool publishWeatherLight(Mac source, const float light);
-    bool publishTankVolume(Mac source, const float volume);
-    bool publishTankValveStatus(Mac source, const boolean status);
+    bool publishWeatherTemperature(Device *source, const float temperature);
+    bool publishWeatherHumidity(Device *source, const float humidity);
+    bool publishWeatherPressure(Device *source, const float pressure);
+    bool publishWeatherLight(Device *source, const float light);
+    bool publishTankVolume(Device *source, const float volume);
+    bool publishDripValveStatus(Device *source, const boolean status);
 };
 
 

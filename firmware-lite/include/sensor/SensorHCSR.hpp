@@ -7,8 +7,7 @@
 #include "sensor/SensorBME.hpp"
 
 
-class SensorHCSR
-{
+class SensorHCSR {
 public:
     SensorHCSR();
     static SensorHCSR *get();

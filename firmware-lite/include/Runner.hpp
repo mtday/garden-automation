@@ -7,6 +7,7 @@ class Runner;
 
 
 #include <stdint.h>
+#include "Device.hpp"
 #include "net/EspNow.hpp"
 #include "net/Messenger.hpp"
 #include "net/Network.hpp"
@@ -17,21 +18,8 @@ class Runner;
 #include "util/Mac.hpp"
 
 
-enum DeviceType
-{
-    Controller  = 'C',
-    Weather     = 'W',
-    TankVolume  = 'V',
-    TankValve   = 'O',
-};
-
-
-class Runner
-{
+class Runner {
 private:
-    Mac mac;
-    DeviceType type;
-
     Network *network;
     NTPTime *ntpTime;
     Messenger *messenger;
@@ -41,11 +29,8 @@ private:
     SensorHCSR *sensorHCSR;
 
 public:
-    Runner(Mac mac, DeviceType type);
+    Runner();
     static Runner *get();
-
-    Mac getMac() const;
-    DeviceType getType() const;
 
     bool setup();
     bool loop();

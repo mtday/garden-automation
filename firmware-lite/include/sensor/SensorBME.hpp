@@ -6,8 +6,7 @@
 #include <Adafruit_BME280.h>
 
 
-class SensorBME
-{
+class SensorBME {
 private:
     Adafruit_BME280 bme;
 

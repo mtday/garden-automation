@@ -6,8 +6,7 @@
 #include <Arduino.h>
 
 
-class SensorGM
-{
+class SensorGM {
 public:
     SensorGM();
     static SensorGM *get();
