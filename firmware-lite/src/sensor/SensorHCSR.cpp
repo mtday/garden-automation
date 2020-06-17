@@ -2,9 +2,19 @@
 #include <Arduino.h>
 #include "sensor/SensorHCSR.hpp"
 
+static SensorHCSR *sensorHCSR;
 
-SensorHCSR::SensorHCSR(SensorBME *sensorBME) {
-    SensorHCSR::sensorBME = sensorBME;
+
+SensorHCSR::SensorHCSR()
+{
+}
+
+SensorHCSR *SensorHCSR::get()
+{
+    if (!sensorHCSR) {
+        sensorHCSR = new SensorHCSR();
+    }
+    return sensorHCSR;
 }
 
 bool SensorHCSR::setup()
@@ -30,8 +40,8 @@ float SensorHCSR::readVolume()
     pinMode(HCSR_ECHO_PIN, INPUT);
     const ulong duration = pulseIn(HCSR_ECHO_PIN, HIGH);
 
-    float temp = sensorBME->readTemperature();
-    float hum = sensorBME->readHumidity();
+    float temp = SensorBME::get()->readTemperature();
+    float hum = SensorBME::get()->readHumidity();
     float speedOfSound = 0.03314 + (0.606 * temp) + (0.0124 * hum);
 
     // divide by 2 since duraiton is round trip, distance in centimeters to the surface of the water

@@ -9,11 +9,9 @@
 
 class SensorHCSR
 {
-private:
-    SensorBME *sensorBME;
-
 public:
-    SensorHCSR(SensorBME *sensorBME);
+    SensorHCSR();
+    static SensorHCSR *get();
 
     bool setup();
     float readVolume();

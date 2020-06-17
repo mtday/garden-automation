@@ -13,6 +13,7 @@ private:
 
 public:
     SensorBME();
+    static SensorBME *get();
 
     bool setup();
 

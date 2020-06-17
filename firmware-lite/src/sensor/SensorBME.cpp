@@ -2,9 +2,20 @@
 #include "sensor/SensorBME.hpp"
 
 
+static SensorBME *sensorBME;
+
+
 SensorBME::SensorBME()
 {
     bme = Adafruit_BME280();
+}
+
+SensorBME *SensorBME::get()
+{
+    if (!sensorBME) {
+        sensorBME = new SensorBME();
+    }
+    return sensorBME;
 }
 
 bool SensorBME::setup()

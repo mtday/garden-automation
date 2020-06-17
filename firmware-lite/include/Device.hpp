@@ -3,8 +3,14 @@
 #define _GARDEN_AUTOMATION_DEVICE_HPP
 
 
+class Device;
+
+
 #include <stdint.h>
-#include "comm/EspNow.hpp"
+#include "net/EspNow.hpp"
+#include "net/Messenger.hpp"
+#include "net/Network.hpp"
+#include "net/NTPTime.hpp"
 #include "sensor/SensorBME.hpp"
 #include "sensor/SensorGM.hpp"
 #include "sensor/SensorHCSR.hpp"
@@ -26,15 +32,17 @@ private:
     Mac mac;
     DeviceType type;
 
+    Network *network;
+    NTPTime *ntpTime;
+    Messenger *messenger;
     EspNow *espNow;
     SensorBME *sensorBME;
     SensorGM *sensorGM;
     SensorHCSR *sensorHCSR;
 
 public:
-    static Device *getDevice();
-
     Device(Mac mac, DeviceType type);
+    static Device *get();
 
     Mac getMac() const;
     DeviceType getType() const;
@@ -43,10 +51,7 @@ public:
     bool loop();
 
     void deepSleep(const ulong seconds);
-
-    void weather(Mac source, const float temperature, const float humidity, const float pressure, const float light);
-    void tankVolume(Mac source, const float volume);
-    void tankValve(Mac source, const bool status);
+    void restart();
 };
 
 

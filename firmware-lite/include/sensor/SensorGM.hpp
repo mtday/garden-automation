@@ -10,6 +10,7 @@ class SensorGM
 {
 public:
     SensorGM();
+    static SensorGM *get();
 
     bool setup();
 

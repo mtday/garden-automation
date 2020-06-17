@@ -5,31 +5,6 @@
 static Device *device;
 
 
-Device *Device::getDevice()
-{
-    if (device) {
-        return device;
-    }
-
-    Mac mac;
-    if (mac == DEVICE_TANK_1_VOLUME ||
-        mac == DEVICE_TANK_2_VOLUME ||
-        mac == DEVICE_TANK_3_VOLUME ||
-        mac == DEVICE_TANK_4_VOLUME) {
-        device = new Device(mac, TankVolume);
-    } else if (mac == DEVICE_TANK_VALVE) {
-        device = new Device(mac, TankValve);
-    } else if (mac == DEVICE_GARDEN_WEATHER) {
-        device = new Device(mac, Weather);
-    } else if (mac == DEVICE_AUTOMATION_CONTROL) {
-        device = new Device(mac, Controller);
-    } else {
-        Serial.printf("ERROR: Unrecognized device mac address: %s\n", mac.c_str());
-        device = NULL;
-    }
-    return device;
-}
-
 Device::Device(Mac mac, DeviceType type)
 {
     Device::mac = mac;
@@ -39,17 +14,41 @@ Device::Device(Mac mac, DeviceType type)
     espNow = new EspNow();
     switch (type) {
         case Controller:
+            network = Network::get();
+            ntpTime = NTPTime::get();
+            messenger = Messenger::get();
             break;
         case Weather:
-            sensorBME = new SensorBME();
-            sensorGM = new SensorGM();
+            sensorBME = SensorBME::get();
+            sensorGM = SensorGM::get();
             break;
         case TankVolume:
-            sensorBME = new SensorBME();
-            sensorHCSR = new SensorHCSR(sensorBME);
+            sensorBME = SensorBME::get();
+            sensorHCSR = SensorHCSR::get();
         case TankValve:
             break;
     }
+}
+
+Device *Device::get()
+{
+    if (device) {
+        return device;
+    }
+
+    Mac mac;
+    DeviceType type;
+    if (mac == DEVICE_AUTOMATION_CONTROL) {
+        type = Controller;
+    } else if (mac == DEVICE_GARDEN_WEATHER) {
+        type = Weather;
+    } else if (mac == DEVICE_TANK_VALVE) {
+        type = TankValve;
+    } else {
+        type = TankVolume;
+    }
+    device = new Device(mac, type);
+    return device;
 }
 
 Mac Device::getMac() const
@@ -65,6 +64,12 @@ DeviceType Device::getType() const
 bool Device::setup()
 {
     Serial.println("INFO:  Initializing device");
+    if (network && !network->setup()) {
+        return false;
+    }
+    if (ntpTime && !ntpTime->setup()) {
+        return false;
+    }
     if (espNow && !espNow->setup()) {
         return false;
     }
@@ -81,7 +86,6 @@ bool Device::setup()
     switch (type) {
         case Controller: {
             Serial.println("INFO:  Running controller device setup");
-            // TODO
             return true;
         }
 
@@ -110,7 +114,6 @@ bool Device::setup()
 
         case TankValve: {
             Serial.println("INFO:  Running tank valve device setup");
-            // TODO
             return true;
         }
 
@@ -122,6 +125,12 @@ bool Device::setup()
 
 bool Device::loop()
 {
+    if (network && !network->loop()) {
+        return false;
+    }
+    if (messenger && !messenger->loop()) {
+        return false;
+    }
     return true;
 }
 
@@ -135,35 +144,8 @@ void Device::deepSleep(const ulong seconds)
     esp_deep_sleep_start();
 }
 
-void Device::weather(Mac source, const float temperature, const float humidity, const float pressure, const float light)
+void Device::restart()
 {
-    Serial.printf("INFO:  Received weather from %s: %f, %f, %f, %f\n",
-            source.c_str(), temperature, humidity, pressure, light);
-    if (type == Controller) {
-        // TODO
-    } else {
-        Serial.println("ERROR: Unexpectedly received weather data message");
-    }
-}
-
-void Device::tankVolume(Mac source, const float volume)
-{
-    Serial.printf("INFO:  Received tank volume from %s: %f\n", source.c_str(), volume);
-    if (type == Controller) {
-        // TODO
-    } else {
-        Serial.println("ERROR: Unexpectedly received tank volume data message");
-    }
-}
-
-void Device::tankValve(Mac source, const bool status)
-{
-    Serial.printf("INFO:  Received tank valve control from %s: %s\n", source.c_str(), status ? "open" : "close");
-    if (type == Controller) {
-        // TODO
-    } else if (type == TankValve) {
-        // TODO
-    } else {
-        Serial.println("ERROR: Unexpectedly received tank valve control message");
-    }
+    Serial.println("INFO:  Restarting");
+    esp_restart();
 }

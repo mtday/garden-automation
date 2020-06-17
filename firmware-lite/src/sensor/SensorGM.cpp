@@ -2,8 +2,19 @@
 #include "sensor/SensorGM.hpp"
 
 
+static SensorGM *sensorGM;
+
+
 SensorGM::SensorGM()
 {
+}
+
+SensorGM *SensorGM::get()
+{
+    if (!sensorGM) {
+        sensorGM = new SensorGM();
+    }
+    return sensorGM;
 }
 
 bool SensorGM::setup()

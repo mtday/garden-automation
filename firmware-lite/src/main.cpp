@@ -5,15 +5,20 @@
 #include "Device.hpp"
 
 
-static Device *device;
-
 void setup() {
     Serial.begin(SERIAL_BAUD);
 
-    device = Device::getDevice();
-    device->setup();
+    if (!Device::get()->setup()) {
+        Serial.println("ERROR: Restarting due to setup failure");
+        delay(3000);
+        Device::get()->restart();
+    }
 }
 
 void loop() {
-    device->loop();
+    if (!Device::get()->loop()) {
+        Serial.println("ERROR: Restarting due to loop failure");
+        delay(3000);
+        Device::get()->restart();
+    }
 }
