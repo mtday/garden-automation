@@ -69,20 +69,21 @@ bool EspNow::sendTank(const float distance) {
     return send(MAC_CONTROLLER, MessageTypeTank, (uint8_t *) &tankData, sizeof(tankData));
 }
 
-bool EspNow::sendDripValve(const bool status) {
+bool EspNow::sendDripValve(const DripValveState state) {
     DripValveData dripValveData;
-    dripValveData.status = status;
+    dripValveData.state = state;
 
-    Serial.printf("INFO:  Sending drip valve data message: %s\n", status ? "opened" : "closed");
+    Serial.printf("INFO:  Sending drip valve data message: %s\n", state ? "opened" : "closed");
     return send(MAC_CONTROLLER, MessageTypeDripValve, (uint8_t *) &dripValveData, sizeof(dripValveData));
 }
 
-bool EspNow::sendDripValveControl(const bool status) {
-    DripValveControl dripValveControl;
-    dripValveControl.status = status;
+bool EspNow::sendDripValveControl(const DripValveState state) {
+    DripValveControlData dripValveControlData;
+    dripValveControlData.state = state;
 
-    Serial.printf("INFO:  Sending drip valve control message: %s\n", status ? "open" : "close");
-    return send(MAC_DRIP_VALVE, MessageTypeDripValveControl, (uint8_t *) &dripValveControl, sizeof(dripValveControl));
+    Serial.printf("INFO:  Sending drip valve control message: %s\n", state ? "open" : "close");
+    return send(MAC_DRIP_VALVE, MessageTypeDripValveControl,
+            (uint8_t *) &dripValveControlData, sizeof(dripValveControlData));
 }
 
 bool EspNow::send(Mac receiver, const MessageType type, const uint8_t *payload, const uint8_t length) {
@@ -173,18 +174,18 @@ void EspNow::recv(const uint8_t *mac, const uint8_t *payload, const int size) {
             }
             DripValveData dripValveData;
             memcpy(&dripValveData, payload + 1, size - 1);
-            EspNow::get()->recvDripValve(source, dripValveData.status);
+            EspNow::get()->recvDripValve(source, dripValveData.state);
             break;
         }
 
         case MessageTypeDripValveControl: {
-            if (sizeof(DripValveControl) + 1 != size) {
+            if (sizeof(DripValveControlData) + 1 != size) {
                 Serial.printf("ERROR: Unexpected ESP-NOW drip valve control message size: %d\n", size);
                 return;
             }
-            DripValveControl dripValveControl;
-            memcpy(&dripValveControl, payload + 1, size - 1);
-            EspNow::get()->recvDripValveControl(source, dripValveControl.status);
+            DripValveControlData dripValveControlData;
+            memcpy(&dripValveControlData, payload + 1, size - 1);
+            EspNow::get()->recvDripValveControl(source, dripValveControlData.state);
             break;
         }
 
@@ -217,14 +218,50 @@ bool EspNow::recvTank(Device *source, const float distance) {
     return Messenger::get()->publishTankDistance(source, distance);
 }
 
-bool EspNow::recvDripValve(Device *source, const bool status)
+bool EspNow::recvDripValve(Device *source, const DripValveState state)
 {
-    Serial.printf("INFO:  Received drip valve data from %s: %s\n", source->c_str(), status ? "opened" : "closed");
-    return Messenger::get()->publishDripValveStatus(source, status);
+    Serial.printf("INFO:  Received drip valve data from %s: %s\n", source->c_str(), state ? "opened" : "closed");
+    return Messenger::get()->publishDripValveState(source, state);
 }
 
-bool EspNow::recvDripValveControl(Device *source, const bool status) {
-    Serial.printf("INFO:  Received drip valve control from %s: %s\n", source->c_str(), status ? "open" : "close");
-    // TODO: control the valve
-    return EspNow::get()->sendDripValve(status);
+bool EspNow::recvDripValveControl(Device *source, const DripValveState state) {
+    Serial.printf("INFO:  Received drip valve control from %s: %s\n", source->c_str(), state ? "open" : "close");
+    ControlDripValve *dripValve = ControlDripValve::get();
+    switch (state) {
+        case DripValveStateOpen: {
+            if (dripValve->getState() == DripValveStateOpen) {
+                // Already open
+                return EspNow::get()->sendDripValve(dripValve->getState());
+            } else if (dripValve->open()) {
+                // Opened
+                if (!EspNow::get()->sendDripValve(dripValve->getState())) {
+                    // Failed to notify that drip valve was opened, close it back to be safe
+                    Serial.println("ERROR: Failed to notify of opened drip valve, closing the valve");
+                    dripValve->close();
+                    return false;
+                } else {
+                    return true;
+                }
+            } else {
+                // Failed to open
+                EspNow::get()->sendDripValve(dripValve->getState());
+                return false;
+            }
+        }
+
+        case DripValveStateClosed: {
+            if (dripValve->getState() == DripValveStateClosed) {
+                // Already closed
+                return EspNow::get()->sendDripValve(dripValve->getState());
+            } else if (dripValve->close()) {
+                // Closed
+                return EspNow::get()->sendDripValve(dripValve->getState());
+            } else {
+                // Failed to close
+                EspNow::get()->sendDripValve(dripValve->getState());
+                return false;
+            }
+        }
+    }
+    return true;
 }

@@ -10,7 +10,7 @@ class Runner;
 #include "net/EspNow.hpp"
 #include "net/Messenger.hpp"
 #include "net/Network.hpp"
-#include "net/NtpTime.hpp"
+#include "net/NetworkTime.hpp"
 #include "sensor/SensorBattery.hpp"
 #include "sensor/SensorDistance.hpp"
 #include "sensor/SensorLight.hpp"
@@ -21,12 +21,14 @@ class Runner {
 private:
     EspNow *espNow;
     Network *network;
-    NtpTime *ntpTime;
+    NetworkTime *networkTime;
     Messenger *messenger;
     SensorBattery *sensorBattery;
     SensorDistance *sensorDistance;
     SensorLight *sensorLight;
     SensorWeather *sensorWeather;
+
+    ulong lastBatteryNotification;
 
 public:
     Runner();

@@ -5,6 +5,7 @@
 
 #include <ArduinoJson.h>
 #include <PubSubClient.h>
+#include "control/ControlDripValve.hpp"
 
 
 class Messenger {
@@ -38,7 +39,7 @@ public:
     bool publishWeatherPressure(Device *source, const float pressure);
     bool publishWeatherLight(Device *source, const float light);
     bool publishTankDistance(Device *source, const float distance);
-    bool publishDripValveStatus(Device *source, const boolean status);
+    bool publishDripValveState(Device *source, const DripValveState state);
 };
 
 

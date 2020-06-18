@@ -6,6 +6,7 @@
 #include <esp_now.h>
 #include <stdint.h>
 #include "Device.hpp"
+#include "control/ControlDripValve.hpp"
 #include "util/Mac.hpp"
 
 
@@ -32,12 +33,12 @@ typedef struct {
 
 
 typedef struct {
-    bool status;
-} DripValveControl;
+    DripValveState state;
+} DripValveControlData;
 
 
 typedef struct {
-    bool status;
+    DripValveState state;
 } DripValveData;
 
 
@@ -62,15 +63,15 @@ public:
     bool sendWeather(const float temperature, const float humidity, const float pressure);
     bool sendLight(const float light);
     bool sendTank(const float distance);
-    bool sendDripValve(const bool status);
-    bool sendDripValveControl(const bool status);
+    bool sendDripValve(const DripValveState state);
+    bool sendDripValveControl(const DripValveState state);
 
     bool recvBattery(Device *source, const float voltage);
     bool recvWeather(Device *source, const float temperature, const float humidity, const float pressure);
     bool recvLight(Device *source, const float light);
     bool recvTank(Device *source, const float distance);
-    bool recvDripValve(Device *source, const bool status);
-    bool recvDripValveControl(Device *source, const bool status);
+    bool recvDripValve(Device *source, const DripValveState state);
+    bool recvDripValveControl(Device *source, const DripValveState state);
 
 protected:
     static bool send(Mac receiver, const MessageType type, const uint8_t *payload, const uint8_t size);

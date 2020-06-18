@@ -10,7 +10,7 @@ Runner::Runner() {
     switch (Device::get()->getType()) {
         case DeviceTypeController:
             network = Network::get();
-            ntpTime = NtpTime::get();
+            networkTime = NetworkTime::get();
             messenger = Messenger::get();
             sensorBattery = NULL;
             sensorWeather = NULL;
@@ -19,7 +19,7 @@ Runner::Runner() {
             break;
         case DeviceTypeWeather:
             network = NULL;
-            ntpTime = NULL;
+            networkTime = NULL;
             messenger = NULL;
             sensorBattery = SensorBattery::get();
             sensorWeather = SensorWeather::get();
@@ -28,7 +28,7 @@ Runner::Runner() {
             break;
         case DeviceTypeTank:
             network = NULL;
-            ntpTime = NULL;
+            networkTime = NULL;
             messenger = NULL;
             sensorBattery = SensorBattery::get();
             sensorWeather = SensorWeather::get();
@@ -36,7 +36,7 @@ Runner::Runner() {
             sensorDistance = SensorDistance::get();
         case DeviceTypeDripValve:
             network = NULL;
-            ntpTime = NULL;
+            networkTime = NULL;
             messenger = NULL;
             sensorBattery = SensorBattery::get();
             sensorWeather = NULL;
@@ -58,7 +58,7 @@ bool Runner::setup() {
     if (network && !network->setup()) {
         return false;
     }
-    if (ntpTime && !ntpTime->setup()) {
+    if (networkTime && !networkTime->setup()) {
         return false;
     }
     if (espNow && !espNow->setup()) {
@@ -140,7 +140,14 @@ bool Runner::loop() {
         return false;
     }
 
-    // TODO: When drip valve, send battery info to controller via ESP-NOW
+    ulong now = millis();
+    if (sensorBattery && now - lastBatteryNotification > READING_BATTERY_INTERVAL) {
+        lastBatteryNotification = now;
+        const float voltage = sensorBattery->readVoltage();
+        if (!espNow->sendBattery(voltage)) {
+            return false;
+        }
+    }
 
     return true;
 }
