@@ -1,6 +1,6 @@
 
-#ifndef _GARDEN_AUTOMATION_NET_ESPNOW_HPP
-#define _GARDEN_AUTOMATION_NET_ESPNOW_HPP
+#ifndef _ESP_NOW_HPP
+#define _ESP_NOW_HPP
 
 
 #include <esp_now.h>
@@ -13,17 +13,22 @@ typedef struct {
     float voltage;
 } BatteryData;
 
+
 typedef struct {
     float temperature;
     float humidity;
     float pressure;
-    float light;
 } WeatherData;
 
 
 typedef struct {
-    float volume;
-} TankVolumeData;
+    float light;
+} LightData;
+
+
+typedef struct {
+    float distance;
+} TankData;
 
 
 typedef struct {
@@ -33,14 +38,16 @@ typedef struct {
 
 typedef struct {
     bool status;
-} DripValveStatus;
+} DripValveData;
+
 
 enum MessageType {
     MessageTypeBattery = 'B',
     MessageTypeWeather = 'W',
-    MessageTypeTankVolume = 'V',
-    MessageTypeDripValveControl = 'D',
-    MessageTypeDripValveStatus = 'S',
+    MessageTypeLight = 'L',
+    MessageTypeTank = 'D',
+    MessageTypeDripValve = 'S',
+    MessageTypeDripValveControl = 'V',
 };
 
 
@@ -52,15 +59,17 @@ public:
     bool setup();
 
     bool sendBattery(const float voltage);
-    bool sendWeather(const float temperature, const float humidity, const float pressure, const float light);
-    bool sendTankVolume(const float volume);
-    bool sendDripValveStatus(const bool status);
+    bool sendWeather(const float temperature, const float humidity, const float pressure);
+    bool sendLight(const float light);
+    bool sendTank(const float distance);
+    bool sendDripValve(const bool status);
     bool sendDripValveControl(const bool status);
 
     bool recvBattery(Device *source, const float voltage);
-    bool recvWeather(Device *source, const float temperature, const float humidity, const float pressure, const float light);
-    bool recvTankVolume(Device *source, const float volume);
-    bool recvDripValveStatus(Device *source, const bool status);
+    bool recvWeather(Device *source, const float temperature, const float humidity, const float pressure);
+    bool recvLight(Device *source, const float light);
+    bool recvTank(Device *source, const float distance);
+    bool recvDripValve(Device *source, const bool status);
     bool recvDripValveControl(Device *source, const bool status);
 
 protected:

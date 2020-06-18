@@ -1,27 +1,27 @@
 
 #include <Arduino.h>
 #include <Time.h>
-#include "net/NTPTime.hpp"
+#include "net/NtpTime.hpp"
 
 
-static NTPTime *ntpTime;
+static NtpTime *ntpTime;
 
-NTPTime::NTPTime() {
+NtpTime::NtpTime() {
 }
 
-NTPTime *NTPTime::get() {
+NtpTime *NtpTime::get() {
     if (!ntpTime) {
-        ntpTime = new NTPTime();
+        ntpTime = new NtpTime();
     }
     return ntpTime;
 }
 
-bool NTPTime::setup() {
+bool NtpTime::setup() {
     Serial.println("INFO:  Configuring NTP time");
     configTime(0, 0, NTP_SERVER_PRIMARY, NTP_SERVER_SECONDARY);
     return true;
 }
 
-time_t NTPTime::now() {
+time_t NtpTime::now() {
     return ::now();
 }

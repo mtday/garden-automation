@@ -5,6 +5,7 @@
 #include <PubSubClient.h>
 #include "net/EspNow.hpp"
 #include "net/Messenger.hpp"
+#include "net/NtpTime.hpp"
 
 
 static Messenger *messenger;
@@ -53,7 +54,7 @@ bool Messenger::loop() {
     }
 
     const ulong now = millis();
-    if (now - lastHeartbeat > HEARTBEAT_INTERVAL) {
+    if (now - lastHeartbeat > MQTT_HEARTBEAT_INTERVAL) {
         publishHeartbeat();
         lastHeartbeat = now;
     }
@@ -65,7 +66,7 @@ bool Messenger::subscribe() {
     if (!isConnected() && !connect()) {
         return false;
     }
-    return mqttClient.subscribe(TOPIC_CONTROL_DRIP_VALVE);
+    return mqttClient.subscribe(TOPIC_VALVE_DRIP_CONTROL);
 }
 
 void Messenger::callback(char *topic, uint8_t *payload, uint length) {
@@ -80,7 +81,7 @@ void Messenger::callback(char *topic, uint8_t *payload, uint length) {
 }
 
 bool Messenger::handleMessage(String topic, StaticJsonDocument<1024> message) {
-    if (topic == TOPIC_CONTROL_DRIP_VALVE) {
+    if (topic == TOPIC_VALVE_DRIP_CONTROL) {
         return EspNow::get()->sendDripValveControl(message["status"]);
     } else {
         Serial.printf("ERROR: Received message on unsupported topic: %s\n", topic.c_str());
@@ -101,14 +102,14 @@ bool Messenger::publish(String topic, StaticJsonDocument<1024> message) {
 
 bool Messenger::publishHeartbeat() {
     StaticJsonDocument<1024> message;
-    message["timestamp"] = NTPTime::get()->now();
+    message["timestamp"] = NtpTime::get()->now();
     return publish(String(TOPIC_HEARTBEAT), message);
 }
 
 bool Messenger::publishBatteryVoltage(Device *source, const float voltage) {
     StaticJsonDocument<1024> message;
     message["source"] = source->getMac().c_str();
-    message["timestamp"] = NTPTime::get()->now();
+    message["timestamp"] = NtpTime::get()->now();
     message["voltage"] = voltage;
     message["unit"] = "percent";
     return publish(String(TOPIC_SENSOR_BATTERY_VOLTAGE), message);
@@ -117,7 +118,7 @@ bool Messenger::publishBatteryVoltage(Device *source, const float voltage) {
 bool Messenger::publishWeatherTemperature(Device *source, const float temperature) {
     StaticJsonDocument<1024> message;
     message["source"] = source->getMac().c_str();
-    message["timestamp"] = NTPTime::get()->now();
+    message["timestamp"] = NtpTime::get()->now();
     message["temperature"] = temperature;
     message["unit"] = "celsius";
     return publish(String(TOPIC_SENSOR_WEATHER_TEMPERATURE), message);
@@ -126,7 +127,7 @@ bool Messenger::publishWeatherTemperature(Device *source, const float temperatur
 bool Messenger::publishWeatherHumidity(Device *source, const float humidity) {
     StaticJsonDocument<1024> message;
     message["source"] = source->getMac().c_str();
-    message["timestamp"] = NTPTime::get()->now();
+    message["timestamp"] = NtpTime::get()->now();
     message["humidity"] = humidity;
     message["unit"] = "percent";
     return publish(String(TOPIC_SENSOR_WEATHER_HUMIDITY), message);
@@ -135,7 +136,7 @@ bool Messenger::publishWeatherHumidity(Device *source, const float humidity) {
 bool Messenger::publishWeatherPressure(Device *source, const float pressure) {
     StaticJsonDocument<1024> message;
     message["source"] = source->getMac().c_str();
-    message["timestamp"] = NTPTime::get()->now();
+    message["timestamp"] = NtpTime::get()->now();
     message["pressure"] = pressure;
     message["unit"] = "pascals";
     return publish(String(TOPIC_SENSOR_WEATHER_PRESSURE), message);
@@ -144,25 +145,25 @@ bool Messenger::publishWeatherPressure(Device *source, const float pressure) {
 bool Messenger::publishWeatherLight(Device *source, const float light) {
     StaticJsonDocument<1024> message;
     message["source"] = source->getMac().c_str();
-    message["timestamp"] = NTPTime::get()->now();
+    message["timestamp"] = NtpTime::get()->now();
     message["light"] = light;
     message["unit"] = "percent";
     return publish(String(TOPIC_SENSOR_WEATHER_LIGHT), message);
 }
 
-bool Messenger::publishTankVolume(Device *source, const float volume) {
+bool Messenger::publishTankDistance(Device *source, const float distance) {
     StaticJsonDocument<1024> message;
     message["source"] = source->getMac().c_str();
-    message["timestamp"] = NTPTime::get()->now();
-    message["volume"] = volume;
-    message["unit"] = "gallons";
-    return publish(String(TOPIC_SENSOR_TANK_VOLUME), message);
+    message["timestamp"] = NtpTime::get()->now();
+    message["distance"] = distance;
+    message["unit"] = "centimeters";
+    return publish(String(TOPIC_SENSOR_TANK_DISTANCE), message);
 }
 
 bool Messenger::publishDripValveStatus(Device *source, const boolean status) {
     StaticJsonDocument<1024> message;
     message["source"] = source->getMac().c_str();
-    message["timestamp"] = NTPTime::get()->now();
+    message["timestamp"] = NtpTime::get()->now();
     message["status"] = status;
-    return publish(String(TOPIC_STATUS_DRIP_VALVE), message);
+    return publish(String(TOPIC_VALVE_DRIP_STATUS), message);
 }

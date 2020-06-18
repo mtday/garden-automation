@@ -1,14 +1,15 @@
 
+#include <Arduino.h>
 #include "Device.hpp"
 
 
-static Device *DEVICE_TANK_1_VOLUME = new Device(MAC_TANK_1_VOLUME, DeviceTypeTankVolume, "Tank 1 Volume");
-static Device *DEVICE_TANK_2_VOLUME = new Device(MAC_TANK_2_VOLUME, DeviceTypeTankVolume, "Tank 1 Volume");
-static Device *DEVICE_TANK_3_VOLUME = new Device(MAC_TANK_3_VOLUME, DeviceTypeTankVolume, "Tank 1 Volume");
-static Device *DEVICE_TANK_4_VOLUME = new Device(MAC_TANK_4_VOLUME, DeviceTypeTankVolume, "Tank 1 Volume");
-static Device *DEVICE_DRIP_VALVE    = new Device(MAC_DRIP_VALVE,    DeviceTypeDripValve,  "Drip Valve");
-static Device *DEVICE_WEATHER       = new Device(MAC_WEATHER,       DeviceTypeWeather,    "Weather");
-static Device *DEVICE_CONTROLLER    = new Device(MAC_CONTROLLER,    DeviceTypeController, "Controller");
+static Device *DEVICE_TANK_1     = new Device(MAC_TANK_1,     DeviceTypeTank,       "Tank 1");
+static Device *DEVICE_TANK_2     = new Device(MAC_TANK_2,     DeviceTypeTank,       "Tank 2");
+static Device *DEVICE_TANK_3     = new Device(MAC_TANK_3,     DeviceTypeTank,       "Tank 3");
+static Device *DEVICE_TANK_4     = new Device(MAC_TANK_4,     DeviceTypeTank,       "Tank 4");
+static Device *DEVICE_DRIP_VALVE = new Device(MAC_DRIP_VALVE, DeviceTypeDripValve,  "Drip Valve");
+static Device *DEVICE_WEATHER    = new Device(MAC_WEATHER,    DeviceTypeWeather,    "Weather");
+static Device *DEVICE_CONTROLLER = new Device(MAC_CONTROLLER, DeviceTypeController, "Controller");
 
 static Device *device;
 
@@ -27,14 +28,14 @@ Device *Device::get() {
 }
 
 Device *Device::get(Mac mac) {
-    if (mac == DEVICE_TANK_1_VOLUME->getMac()) {
-        return DEVICE_TANK_1_VOLUME;
-    } else if (mac == DEVICE_TANK_2_VOLUME->getMac()) {
-        return DEVICE_TANK_2_VOLUME;
-    } else if (mac == DEVICE_TANK_3_VOLUME->getMac())
-        return DEVICE_TANK_3_VOLUME;
-    else if (mac == DEVICE_TANK_4_VOLUME->getMac()) {
-        return DEVICE_TANK_4_VOLUME;
+    if (mac == DEVICE_TANK_1->getMac()) {
+        return DEVICE_TANK_1;
+    } else if (mac == DEVICE_TANK_2->getMac()) {
+        return DEVICE_TANK_2;
+    } else if (mac == DEVICE_TANK_3->getMac())
+        return DEVICE_TANK_3;
+    else if (mac == DEVICE_TANK_4->getMac()) {
+        return DEVICE_TANK_4;
     } else if (mac == DEVICE_DRIP_VALVE->getMac()) {
         return DEVICE_DRIP_VALVE;
     } else if (mac == DEVICE_WEATHER->getMac()) {

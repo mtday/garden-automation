@@ -1,6 +1,6 @@
 
-#ifndef _GARDEN_AUTOMATION_NET_NETWORK_HPP
-#define _GARDEN_AUTOMATION_NET_NETWORK_HPP
+#ifndef _NETWORK_HPP
+#define _NETWORK_HPP
 
 
 #include <stdint.h>

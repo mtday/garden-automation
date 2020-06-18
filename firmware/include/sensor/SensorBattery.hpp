@@ -1,9 +1,6 @@
 
-#ifndef _GARDEN_AUTOMATION_SENSOR_BATTERY_HPP
-#define _GARDEN_AUTOMATION_SENSOR_BATTERY_HPP
-
-
-#include <Arduino.h>
+#ifndef _SENSOR_BATTERY_HPP
+#define _SENSOR_BATTERY_HPP
 
 
 class SensorBattery {

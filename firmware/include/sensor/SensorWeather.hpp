@@ -1,18 +1,18 @@
 
-#ifndef _GARDEN_AUTOMATION_SENSOR_BME_HPP
-#define _GARDEN_AUTOMATION_SENSOR_BME_HPP
+#ifndef _SENSOR_WEATHER_HPP
+#define _SENSOR_WEATHER_HPP
 
 
 #include <Adafruit_BME280.h>
 
 
-class SensorBME {
+class SensorWeather {
 private:
     Adafruit_BME280 bme;
 
 public:
-    SensorBME();
-    static SensorBME *get();
+    SensorWeather();
+    static SensorWeather *get();
 
     bool setup();
 

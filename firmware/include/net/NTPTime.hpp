@@ -1,15 +1,15 @@
 
-#ifndef _GARDEN_AUTOMATION_NET_NTPTIME_HPP
-#define _GARDEN_AUTOMATION_NET_NTPTIME_HPP
+#ifndef _NTP_TIME_HPP
+#define _NTP_TIME_HPP
 
 
 #include <time.h>
 
 
-class NTPTime {
+class NtpTime {
 public:
-    NTPTime();
-    static NTPTime *get();
+    NtpTime();
+    static NtpTime *get();
 
     bool setup();
     time_t now();

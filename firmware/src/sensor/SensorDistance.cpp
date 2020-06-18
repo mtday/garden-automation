@@ -1,28 +1,29 @@
 
 #include <Arduino.h>
-#include "sensor/SensorHCSR.hpp"
+#include "sensor/SensorDistance.hpp"
+#include "sensor/SensorWeather.hpp"
 
-static SensorHCSR *sensorHCSR;
+static SensorDistance *sensorDistance;
 
 
-SensorHCSR::SensorHCSR() {
+SensorDistance::SensorDistance() {
 }
 
-SensorHCSR *SensorHCSR::get() {
-    if (!sensorHCSR) {
-        sensorHCSR = new SensorHCSR();
+SensorDistance *SensorDistance::get() {
+    if (!sensorDistance) {
+        sensorDistance = new SensorDistance();
     }
-    return sensorHCSR;
+    return sensorDistance;
 }
 
-bool SensorHCSR::setup() {
-    Serial.println("INFO:  Initializing HCSR sensor");
+bool SensorDistance::setup() {
+    Serial.println("INFO:  Initializing Distance sensor");
     pinMode(HCSR_TRIGGER_PIN, OUTPUT);
     pinMode(HCSR_ECHO_PIN, INPUT);
     return true;
 }
 
-float SensorHCSR::readVolume() {
+float SensorDistance::readDistance() {
     // The sensor is triggered by a HIGH pulse of 10 or more microseconds. Give a short LOW pulse
     // beforehand to ensure a clean HIGH pulse:
     digitalWrite(HCSR_TRIGGER_PIN, LOW);
@@ -36,19 +37,20 @@ float SensorHCSR::readVolume() {
     pinMode(HCSR_ECHO_PIN, INPUT);
     const ulong duration = pulseIn(HCSR_ECHO_PIN, HIGH);
 
-    float temp = SensorBME::get()->readTemperature();
-    float hum = SensorBME::get()->readHumidity();
+    float temp = SensorWeather::get()->readTemperature();
+    float hum = SensorWeather::get()->readHumidity();
     float speedOfSound = 0.03314 + (0.606 * temp) + (0.0124 * hum);
 
-    // divide by 2 since duraiton is round trip, distance in centimeters to the surface of the water
+    // divide by 2 since duration is round trip, distance in centimeters to the surface of the water
     const float distance = (duration / 2.0) * speedOfSound;
 
+    // to calculate how full the tank is:
+    // float percentFull = 100.0 - ((distance - TANK_MIN_READING) / (TANK_MAX_READING - TANK_MIN_READING) * 100.0);
+    // float volume = TANK_MAX_VOLUME * percentFull; // gallons
     // examples:
     // 100 - ((7 - 4) / (10 - 4) * 100) = 100 - (3 / 6 * 100) = 100 - 50   = 50.0%
     // 100 - ((9 - 4) / (10 - 4) * 100) = 100 - (5 / 6 * 100) = 100 - 83.3 = 16.7%
-    float percentFull = 100.0 - ((distance - TANK_MIN_READING) / (TANK_MAX_READING - TANK_MIN_READING) * 100.0);
 
-    float volume = TANK_MAX_VOLUME * percentFull; // gallons
-    Serial.printf("INFO:  HCSR sensor read volume: %f\n", volume);
-    return volume;
+    Serial.printf("INFO:  Distance sensor read distance: %f\n", distance);
+    return distance;
 }

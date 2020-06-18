@@ -1,6 +1,6 @@
 
-#ifndef _GARDEN_AUTOMATION_DEVICE_HPP
-#define _GARDEN_AUTOMATION_DEVICE_HPP
+#ifndef _DEVICE_HPP
+#define _DEVICE_HPP
 
 
 #include <stdint.h>
@@ -10,7 +10,7 @@
 enum DeviceType {
     DeviceTypeController  = 'C',
     DeviceTypeWeather     = 'W',
-    DeviceTypeTankVolume  = 'V',
+    DeviceTypeTank        = 'T',
     DeviceTypeDripValve   = 'D',
 };
 

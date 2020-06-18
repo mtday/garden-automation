@@ -1,25 +1,10 @@
 
-#ifndef _GARDEN_AUTOMATION_NET_MESSENGER_HPP
-#define _GARDEN_AUTOMATION_NET_MESSENGER_HPP
+#ifndef _MESSENGER_HPP
+#define _MESSENGER_HPP
 
 
 #include <ArduinoJson.h>
 #include <PubSubClient.h>
-#include "net/Network.hpp"
-#include "net/NTPTime.hpp"
-#include "util/Mac.hpp"
-
-
-// topics
-#define TOPIC_HEARTBEAT                  "heartbeat"
-#define TOPIC_SENSOR_BATTERY_VOLTAGE     "sensor/battery/voltage"
-#define TOPIC_SENSOR_WEATHER_TEMPERATURE "sensor/weather/temperature"
-#define TOPIC_SENSOR_WEATHER_HUMIDITY    "sensor/weather/humidity"
-#define TOPIC_SENSOR_WEATHER_PRESSURE    "sensor/weather/pressure"
-#define TOPIC_SENSOR_WEATHER_LIGHT       "sensor/weather/light"
-#define TOPIC_SENSOR_TANK_VOLUME         "sensor/tank/volume"
-#define TOPIC_CONTROL_DRIP_VALVE         "control/drip/valve"
-#define TOPIC_STATUS_DRIP_VALVE          "status/drip/valve"
 
 
 class Messenger {
@@ -52,7 +37,7 @@ public:
     bool publishWeatherHumidity(Device *source, const float humidity);
     bool publishWeatherPressure(Device *source, const float pressure);
     bool publishWeatherLight(Device *source, const float light);
-    bool publishTankVolume(Device *source, const float volume);
+    bool publishTankDistance(Device *source, const float distance);
     bool publishDripValveStatus(Device *source, const boolean status);
 };
 

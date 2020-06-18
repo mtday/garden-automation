@@ -6,38 +6,42 @@ static Runner *runner;
 
 
 Runner::Runner() {
-    espNow = new EspNow();
+    espNow = EspNow::get();
     switch (Device::get()->getType()) {
         case DeviceTypeController:
             network = Network::get();
-            ntpTime = NTPTime::get();
+            ntpTime = NtpTime::get();
             messenger = Messenger::get();
             sensorBattery = NULL;
-            sensorBME = NULL;
-            sensorGM = NULL;
+            sensorWeather = NULL;
+            sensorLight = NULL;
+            sensorDistance = NULL;
             break;
         case DeviceTypeWeather:
             network = NULL;
             ntpTime = NULL;
             messenger = NULL;
             sensorBattery = SensorBattery::get();
-            sensorBME = SensorBME::get();
-            sensorGM = SensorGM::get();
+            sensorWeather = SensorWeather::get();
+            sensorLight = SensorLight::get();
+            sensorDistance = NULL;
             break;
-        case DeviceTypeTankVolume:
+        case DeviceTypeTank:
             network = NULL;
             ntpTime = NULL;
             messenger = NULL;
             sensorBattery = SensorBattery::get();
-            sensorBME = SensorBME::get();
-            sensorHCSR = SensorHCSR::get();
+            sensorWeather = SensorWeather::get();
+            sensorLight = NULL;
+            sensorDistance = SensorDistance::get();
         case DeviceTypeDripValve:
             network = NULL;
             ntpTime = NULL;
             messenger = NULL;
             sensorBattery = SensorBattery::get();
-            sensorBME = NULL;
-            sensorHCSR = NULL;
+            sensorWeather = NULL;
+            sensorLight = NULL;
+            sensorDistance = NULL;
             break;
     }
 }
@@ -63,13 +67,13 @@ bool Runner::setup() {
     if (sensorBattery && !sensorBattery->setup()) {
         return false;
     }
-    if (sensorBME && !sensorBME->setup()) {
+    if (sensorWeather && !sensorWeather->setup()) {
         return false;
     }
-    if (sensorGM && !sensorGM->setup()) {
+    if (sensorLight && !sensorLight->setup()) {
         return false;
     }
-    if (sensorHCSR && !sensorHCSR->setup()) {
+    if (sensorDistance && !sensorDistance->setup()) {
         return false;
     }
 
@@ -85,28 +89,31 @@ bool Runner::setup() {
             if (!espNow->sendBattery(voltage)) {
                 return false;
             }
-            const float temperature = sensorBME->readTemperature();
-            const float humidity = sensorBME->readHumidity();
-            const float pressure = sensorBME->readPressure();
-            const float light = sensorGM->readLight();
-            if (!espNow->sendWeather(temperature, humidity, pressure, light)) {
+            const float temperature = sensorWeather->readTemperature();
+            const float humidity = sensorWeather->readHumidity();
+            const float pressure = sensorWeather->readPressure();
+            if (!espNow->sendWeather(temperature, humidity, pressure)) {
                 return false;
             }
-            deepSleep(READING_WEATHER_INTERVAL);
+            const float light = sensorLight->readLight();
+            if (!espNow->sendLight(light)) {
+                return false;
+            }
+            deepSleep(WEATHER_SLEEP_PERIOD);
             return true;
         }
 
-        case DeviceTypeTankVolume: {
-            Serial.println("INFO:  Running tank volume setup");
+        case DeviceTypeTank: {
+            Serial.println("INFO:  Running tank setup");
             const float voltage = sensorBattery->readVoltage();
             if (!espNow->sendBattery(voltage)) {
                 return false;
             }
-            const float volume = sensorHCSR->readVolume();
-            if (!espNow->sendTankVolume(volume)) {
+            const float distance = sensorDistance->readDistance();
+            if (!espNow->sendTank(distance)) {
                 return false;
             }
-            deepSleep(READING_TANK_VOLUME_INTERVAL);
+            deepSleep(TANK_SLEEP_PERIOD);
             return true;
         }
 
@@ -132,6 +139,9 @@ bool Runner::loop() {
     if (messenger && !messenger->loop()) {
         return false;
     }
+
+    // TODO: When drip valve, send battery info to controller via ESP-NOW
+
     return true;
 }
 

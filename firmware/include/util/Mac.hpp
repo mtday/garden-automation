@@ -1,11 +1,10 @@
 
-#ifndef _GARDEN_AUTOMATION_UTIL_MAC_HPP
-#define _GARDEN_AUTOMATION_UTIL_MAC_HPP
+#ifndef _MAC_HPP
+#define _MAC_HPP
 
 
 #include <stdint.h>
 #include <WString.h>
-#include <WiFi.h>
 
 
 class Mac {
