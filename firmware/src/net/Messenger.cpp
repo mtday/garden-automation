@@ -151,10 +151,11 @@ bool Messenger::publishWeatherLight(Device *source, const float light) {
     return publish(String(TOPIC_SENSOR_WEATHER_LIGHT), message);
 }
 
-bool Messenger::publishTankDistance(Device *source, const float distance) {
+bool Messenger::publishTankDistance(Device *source, const uint8_t tank, const float distance) {
     StaticJsonDocument<1024> message;
     message["source"] = source->getMac().c_str();
     message["timestamp"] = NetworkTime::get()->now();
+    message["tank"] = tank;
     message["distance"] = distance;
     message["unit"] = "centimeters";
     return publish(String(TOPIC_SENSOR_TANK_DISTANCE), message);

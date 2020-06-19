@@ -38,7 +38,7 @@ public:
     bool publishWeatherHumidity(Device *source, const float humidity);
     bool publishWeatherPressure(Device *source, const float pressure);
     bool publishWeatherLight(Device *source, const float light);
-    bool publishTankDistance(Device *source, const float distance);
+    bool publishTankDistance(Device *source, const uint8_t tank, const float distance);
     bool publishDripValveState(Device *source, const DripValveState state);
 };
 

@@ -3,13 +3,11 @@
 #include "Device.hpp"
 
 
-static Device *DEVICE_TANK_1     = new Device(MAC_TANK_1,     DeviceTypeTank,       "Tank 1");
-static Device *DEVICE_TANK_2     = new Device(MAC_TANK_2,     DeviceTypeTank,       "Tank 2");
-static Device *DEVICE_TANK_3     = new Device(MAC_TANK_3,     DeviceTypeTank,       "Tank 3");
-static Device *DEVICE_TANK_4     = new Device(MAC_TANK_4,     DeviceTypeTank,       "Tank 4");
-static Device *DEVICE_DRIP_VALVE = new Device(MAC_DRIP_VALVE, DeviceTypeDripValve,  "Drip Valve");
-static Device *DEVICE_WEATHER    = new Device(MAC_WEATHER,    DeviceTypeWeather,    "Weather");
-static Device *DEVICE_CONTROLLER = new Device(MAC_CONTROLLER, DeviceTypeController, "Controller");
+static Device *DEVICE_TANK_GROUP_A  = new Device(MAC_TANK_GROUP_A, DeviceTypeTankGroup,  "Tank Group A");
+static Device *DEVICE_TANK_GROUP_B  = new Device(MAC_TANK_GROUP_B, DeviceTypeTankGroup,  "Tank Group B");
+static Device *DEVICE_DRIP_VALVE    = new Device(MAC_DRIP_VALVE,   DeviceTypeDripValve,  "Drip Valve");
+static Device *DEVICE_WEATHER       = new Device(MAC_WEATHER,      DeviceTypeWeather,    "Weather");
+static Device *DEVICE_CONTROLLER    = new Device(MAC_CONTROLLER,   DeviceTypeController, "Controller");
 
 static Device *device;
 
@@ -28,14 +26,10 @@ Device *Device::get() {
 }
 
 Device *Device::get(Mac mac) {
-    if (mac == DEVICE_TANK_1->getMac()) {
-        return DEVICE_TANK_1;
-    } else if (mac == DEVICE_TANK_2->getMac()) {
-        return DEVICE_TANK_2;
-    } else if (mac == DEVICE_TANK_3->getMac())
-        return DEVICE_TANK_3;
-    else if (mac == DEVICE_TANK_4->getMac()) {
-        return DEVICE_TANK_4;
+    if (mac == DEVICE_TANK_GROUP_A->getMac()) {
+        return DEVICE_TANK_GROUP_A;
+    } else if (mac == DEVICE_TANK_GROUP_B->getMac()) {
+        return DEVICE_TANK_GROUP_B;
     } else if (mac == DEVICE_DRIP_VALVE->getMac()) {
         return DEVICE_DRIP_VALVE;
     } else if (mac == DEVICE_WEATHER->getMac()) {

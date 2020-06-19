@@ -3,8 +3,9 @@
 #include "sensor/SensorDistance.hpp"
 #include "sensor/SensorWeather.hpp"
 
-static SensorDistance *sensorDistance;
 
+static const uint8_t pins[] = HCSR_PINS;
+static SensorDistance *sensorDistance;
 
 SensorDistance::SensorDistance() {
 }
@@ -18,24 +19,26 @@ SensorDistance *SensorDistance::get() {
 
 bool SensorDistance::setup() {
     Serial.println("INFO:  Initializing Distance sensor");
-    pinMode(HCSR_TRIGGER_PIN, OUTPUT);
-    pinMode(HCSR_ECHO_PIN, INPUT);
     return true;
 }
 
-float SensorDistance::readDistance() {
+
+float SensorDistance::readDistance(const uint8_t tank) {
+    const uint8_t pin = pins[tank];
+
     // The sensor is triggered by a HIGH pulse of 10 or more microseconds. Give a short LOW pulse
     // beforehand to ensure a clean HIGH pulse:
-    digitalWrite(HCSR_TRIGGER_PIN, LOW);
+    pinMode(pin, OUTPUT);
+    digitalWrite(pin, LOW);
     delayMicroseconds(5);
-    digitalWrite(HCSR_TRIGGER_PIN, HIGH);
+    digitalWrite(pin, HIGH);
     delayMicroseconds(10);
-    digitalWrite(HCSR_TRIGGER_PIN, LOW);
+    digitalWrite(pin, LOW);
  
     // Read the signal from the sensor: a HIGH pulse whose duration is the time (in microseconds)
     // from the sending of the ping to the reception of its echo off of an object.
-    pinMode(HCSR_ECHO_PIN, INPUT);
-    const ulong duration = pulseIn(HCSR_ECHO_PIN, HIGH);
+    pinMode(pin, INPUT);
+    const ulong duration = pulseIn(pin, HIGH);
 
     float temp = SensorWeather::get()->readTemperature();
     float hum = SensorWeather::get()->readHumidity();
@@ -51,6 +54,6 @@ float SensorDistance::readDistance() {
     // 100 - ((7 - 4) / (10 - 4) * 100) = 100 - (3 / 6 * 100) = 100 - 50   = 50.0%
     // 100 - ((9 - 4) / (10 - 4) * 100) = 100 - (5 / 6 * 100) = 100 - 83.3 = 16.7%
 
-    Serial.printf("INFO:  Distance sensor read distance: %f\n", distance);
+    Serial.printf("INFO:  Distance sensor %d read distance: %f\n", tank + 1, distance);
     return distance;
 }

@@ -26,7 +26,7 @@ Runner::Runner() {
             sensorLight = SensorLight::get();
             sensorDistance = NULL;
             break;
-        case DeviceTypeTank:
+        case DeviceTypeTankGroup:
             network = NULL;
             networkTime = NULL;
             messenger = NULL;
@@ -103,15 +103,17 @@ bool Runner::setup() {
             return true;
         }
 
-        case DeviceTypeTank: {
-            Serial.println("INFO:  Running tank setup");
+        case DeviceTypeTankGroup: {
+            Serial.println("INFO:  Running tank group setup");
             const float voltage = sensorBattery->readVoltage();
             if (!espNow->sendBattery(voltage)) {
                 return false;
             }
-            const float distance = sensorDistance->readDistance();
-            if (!espNow->sendTank(distance)) {
-                return false;
+            for (int tank = 0; tank < NUM_TANKS; tank++) {
+                const float distance = sensorDistance->readDistance(tank);
+                if (!espNow->sendTankDistance(tank, distance)) {
+                    return false;
+                }
             }
             deepSleep(TANK_SLEEP_PERIOD);
             return true;

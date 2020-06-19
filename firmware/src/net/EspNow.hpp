@@ -28,6 +28,7 @@ typedef struct {
 
 
 typedef struct {
+    uint8_t tank;
     float distance;
 } TankData;
 
@@ -62,14 +63,14 @@ public:
     bool sendBattery(const float voltage);
     bool sendWeather(const float temperature, const float humidity, const float pressure);
     bool sendLight(const float light);
-    bool sendTank(const float distance);
+    bool sendTankDistance(const uint8_t tank, const float distance);
     bool sendDripValve(const DripValveState state);
     bool sendDripValveControl(const DripValveState state);
 
     bool recvBattery(Device *source, const float voltage);
     bool recvWeather(Device *source, const float temperature, const float humidity, const float pressure);
     bool recvLight(Device *source, const float light);
-    bool recvTank(Device *source, const float distance);
+    bool recvTankDistance(Device *source, const uint8_t tank, const float distance);
     bool recvDripValve(Device *source, const DripValveState state);
     bool recvDripValveControl(Device *source, const DripValveState state);
 

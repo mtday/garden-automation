@@ -61,8 +61,9 @@ bool EspNow::sendLight(const float light) {
     return send(MAC_CONTROLLER, MessageTypeBattery, (uint8_t *) &lightData, sizeof(lightData));
 }
 
-bool EspNow::sendTank(const float distance) {
+bool EspNow::sendTankDistance(const uint8_t tank, const float distance) {
     TankData tankData;
+    tankData.tank = tank;
     tankData.distance = distance;
 
     Serial.printf("INFO:  Sending tank data message: %f\n", distance);
@@ -163,7 +164,7 @@ void EspNow::recv(const uint8_t *mac, const uint8_t *payload, const int size) {
             }
             TankData tankData;
             memcpy(&tankData, payload + 1, size - 1);
-            EspNow::get()->recvTank(source, tankData.distance);
+            EspNow::get()->recvTankDistance(source, tankData.tank, tankData.distance);
             break;
         }
 
@@ -213,9 +214,9 @@ bool EspNow::recvLight(Device *source, const float light) {
     return Messenger::get()->publishWeatherLight(source, light);
 }
 
-bool EspNow::recvTank(Device *source, const float distance) {
-    Serial.printf("INFO:  Received tank data from %s: %f\n", source->c_str(), distance);
-    return Messenger::get()->publishTankDistance(source, distance);
+bool EspNow::recvTankDistance(Device *source, const uint8_t tank, const float distance) {
+    Serial.printf("INFO:  Received tank %d data from %s: %f\n", tank, source->c_str(), distance);
+    return Messenger::get()->publishTankDistance(source, tank, distance);
 }
 
 bool EspNow::recvDripValve(Device *source, const DripValveState state)

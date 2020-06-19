@@ -9,7 +9,7 @@ public:
     static SensorDistance *get();
 
     bool setup();
-    float readDistance();
+    float readDistance(const uint8_t tank);
 };
 
 
