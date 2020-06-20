@@ -116,7 +116,7 @@ bool Messenger::publish(String topic, StaticJsonDocument<1024> message) {
         return false;
     }
 
-    message["timestamp"] = networkTime->now();
+    message["timestamp"] = networkTime->isotime();
 
     char json[1024];
     const size_t length = serializeJson(message, json);

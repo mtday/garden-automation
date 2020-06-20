@@ -14,7 +14,7 @@ bool SensorLight::get(SensorLight **ref, DeviceType deviceType) {
         *ref = sensorLight;
         return true;
     }
-    if (!TEST_MODE && deviceType != DeviceTypeWeather) {
+    if (deviceType != DeviceTypeWeather) {
         *ref = NULL;
         return true;
     }

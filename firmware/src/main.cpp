@@ -74,10 +74,6 @@ void setup() {
     }
 
     switch (device->getType()) {
-        case DeviceTypeController: {
-            // Nothing to do
-        }
-
         case DeviceTypeWeather: {
             Serial.println("INFO:  Performing weather readings");
             const float voltage = sensorBattery->readVoltage();
@@ -112,7 +108,11 @@ void setup() {
         }
 
         case DeviceTypeDripValve: {
-            // Nothing to do
+            Serial.println("INFO:  Drip valve initialized, waiting for control requests");
+        }
+
+        case DeviceTypeController: {
+            Serial.println("INFO:  Controller initialized, waiting for messages");
         }
 
         default:

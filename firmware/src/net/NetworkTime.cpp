@@ -30,9 +30,18 @@ bool NetworkTime::get(NetworkTime **ref, DeviceType deviceType) {
 bool NetworkTime::setup() {
     Serial.println("INFO:  Configuring network time");
     configTime(0, 0, NTP_SERVER_PRIMARY, NTP_SERVER_SECONDARY);
+    Serial.printf("INFO:  Current time is: %s\n", isotime().c_str());
     return true;
 }
 
 time_t NetworkTime::now() {
     return ::now();
+}
+
+String NetworkTime::isotime() {
+    const time_t time = now();
+    char timestr[20];
+    snprintf(timestr, 20, "%04d-%02d-%02dT%02d:%02d:%02dZ",
+            year(time), month(time), day(time), hour(time), minute(time), second(time));
+    return String(timestr);
 }

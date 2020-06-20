@@ -16,7 +16,7 @@ bool SensorBattery::get(SensorBattery **ref, DeviceType deviceType, EspNow *espN
         *ref = sensorBattery;
         return true;
     }
-    if (!TEST_MODE && deviceType == DeviceTypeController) {
+    if (deviceType == DeviceTypeController) {
         *ref = NULL;
         return true;
     }

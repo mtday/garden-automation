@@ -16,6 +16,7 @@ public:
     static bool get(NetworkTime **ref, DeviceType deviceType);
 
     time_t now();
+    String isotime();
 };
 
 

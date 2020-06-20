@@ -16,7 +16,7 @@ bool SensorDistance::get(SensorDistance **ref, DeviceType deviceType, SensorWeat
         *ref = sensorDistance;
         return true;
     }
-    if (!TEST_MODE && deviceType != DeviceTypeTankGroup) {
+    if (deviceType != DeviceTypeTankGroup) {
         *ref = NULL;
         return true;
     }

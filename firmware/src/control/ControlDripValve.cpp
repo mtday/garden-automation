@@ -14,7 +14,7 @@ bool ControlDripValve::get(ControlDripValve **ref, DeviceType deviceType) {
         *ref = dripValve;
         return true;
     }
-    if (!TEST_MODE && deviceType != DeviceTypeDripValve) {
+    if (deviceType != DeviceTypeDripValve) {
         *ref = NULL;
         return true;
     }
