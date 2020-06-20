@@ -20,7 +20,7 @@ protected:
 
 public:
     Network();
-    static bool get(Network **ref, DeviceType deviceType);
+    static bool get(Network **ref);
 
     IPAddress getIp();
 

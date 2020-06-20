@@ -10,13 +10,9 @@ static Network *network;
 Network::Network() {
 }
 
-bool Network::get(Network **ref, DeviceType deviceType) {
+bool Network::get(Network **ref) {
     if (network) {
         *ref = network;
-        return true;
-    }
-    if (deviceType != DeviceTypeController) {
-        *ref = NULL;
         return true;
     }
     network = new Network();
@@ -53,7 +49,7 @@ bool Network::connect() {
         return true;
     }
 
-    Serial.printf("INFO:  Connecting to wifi network: %s\n", WIFI_SSID);
+    Serial.printf("INFO:  Connecting to WiFi network: %s\n", WIFI_SSID);
     WiFi.mode(WIFI_MODE_STA);
     const ulong start = millis();
     do {
@@ -64,20 +60,20 @@ bool Network::connect() {
                 uint8_t mac[6];
                 WiFi.macAddress(mac);
                 Ethernet.begin(mac, ip);
-                Serial.printf("INFO:  Connected successfully, IP is: %s\n", ip.toString().c_str());
+                Serial.printf("INFO:  WiFi connected successfully, IP is: %s\n", ip.toString().c_str());
                 return true;
 
             case WL_NO_SSID_AVAIL:
             case WL_CONNECT_FAILED:
             case WL_CONNECTION_LOST:
             case WL_DISCONNECTED:
-                Serial.printf("ERROR: Connection failed with status %d\n", status);
+                Serial.printf("ERROR: WiFi connection failed with status %d\n", status);
                 return false;
 
             case WL_NO_SHIELD:
             case WL_SCAN_COMPLETED:
                 // not expected in `WIFI_MODE_STA`
-                Serial.printf("ERROR: Connection failed, unexpected status %d\n", status);
+                Serial.printf("ERROR: WiFi connection failed, unexpected status %d\n", status);
                 return false;
 
             case WL_IDLE_STATUS:
@@ -85,7 +81,7 @@ bool Network::connect() {
                 const ulong waitTime = now - start;
                 if (waitTime > WIFI_CONNECT_TIMEOUT) {
                     // already waited too long
-                    Serial.println("ERROR: Connection failed, timed out");
+                    Serial.println("ERROR: WiFi connection failed, timed out");
                     WiFi.disconnect();
                     return false;
                 }

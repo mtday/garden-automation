@@ -7,16 +7,14 @@
 #include <PubSubClient.h>
 #include <stdint.h>
 #include "Device.hpp"
-#include "net/EspNow.hpp"
 #include "control/ControlDripValve.hpp"
+#include "net/NetworkTime.hpp"
 
 
 class Messenger {
 private:
-    EspNow *espNow;
-
+    NetworkTime *networkTime;
     PubSubClient mqttClient;
-    ulong lastHeartbeat;
 
 protected:
     bool isConnected();
@@ -30,15 +28,14 @@ protected:
     static void callback(char *topic, uint8_t *payload, uint length);
 
 public:
-    Messenger(EspNow *espNow);
-    static bool get(Messenger **ref, DeviceType deviceType, EspNow *espNow);
+    Messenger(NetworkTime *networkTime);
+    static bool get(Messenger **ref, NetworkTime *networkTime);
 
     bool loop();
 
     bool handleMessage(String topic, StaticJsonDocument<1024> message);
     bool subscribe();
 
-    bool publishHeartbeat();
     bool publishBatteryVoltage(Device *source, const float voltage);
     bool publishWeatherTemperature(Device *source, const float temperature);
     bool publishWeatherHumidity(Device *source, const float humidity);

@@ -9,13 +9,9 @@ static NetworkTime *networkTime;
 NetworkTime::NetworkTime() {
 }
 
-bool NetworkTime::get(NetworkTime **ref, DeviceType deviceType) {
+bool NetworkTime::get(NetworkTime **ref) {
     if (networkTime) {
         *ref = networkTime;
-        return true;
-    }
-    if (deviceType != DeviceTypeController) {
-        *ref = NULL;
         return true;
     }
     networkTime = new NetworkTime();

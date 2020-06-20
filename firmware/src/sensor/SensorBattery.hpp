@@ -9,14 +9,15 @@
 
 class SensorBattery {
 private:
+    Messenger *messenger;
     ulong lastBatteryNotification;
 
 protected:
     bool setup();
 
 public:
-    SensorBattery(EspNow *espNow);
-    static bool get(SensorBattery **ref, DeviceType deviceType, EspNow *espNow);
+    SensorBattery(Messenger *messenger);
+    static bool get(SensorBattery **ref, DeviceType deviceType, Messenger *messenger);
 
     bool loop();
 

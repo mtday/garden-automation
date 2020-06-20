@@ -8,7 +8,6 @@
 
 
 enum DeviceType {
-    DeviceTypeController  = 'C',
     DeviceTypeWeather     = 'W',
     DeviceTypeTankGroup   = 'T',
     DeviceTypeDripValve   = 'D',

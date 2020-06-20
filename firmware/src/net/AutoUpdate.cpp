@@ -30,14 +30,17 @@ bool AutoUpdate::setup() {
         .onEnd(AutoUpdate::onEnd)
         .onError(AutoUpdate::onError)
         .begin();
+    ArduinoOTA.handle();
     return true;
 }
 
 bool AutoUpdate::loop() {
+    ArduinoOTA.handle();
+    return true;
 }
 
 void AutoUpdate::onStart() {
-    const String type = ArduinoOTA.getCommand() == U_FLASH ? "flash" : "spffs";
+    const char *type = ArduinoOTA.getCommand() == U_FLASH ? "flash" : "spffs";
     Serial.printf("INFO:  Starting update %s\n", type);
 }
 
@@ -67,6 +70,8 @@ void AutoUpdate::onError(ota_error_t error) {
         case OTA_END_ERROR:
             errorMessage = "ERROR: Failed to finalize update";
             break;
+        default:
+            errorMessage = "ERROR: Failed to perform update";
     }
     Serial.println(errorMessage);
 }

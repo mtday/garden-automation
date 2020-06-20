@@ -13,7 +13,7 @@ protected:
 
 public:
     NetworkTime();
-    static bool get(NetworkTime **ref, DeviceType deviceType);
+    static bool get(NetworkTime **ref);
 
     time_t now();
     String isotime();

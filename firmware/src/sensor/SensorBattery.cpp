@@ -1,26 +1,23 @@
 
 #include <Arduino.h>
-#include "net/EspNow.hpp"
+#include "net/Messenger.hpp"
 #include "sensor/SensorBattery.hpp"
 
 
 static SensorBattery *sensorBattery;
 
 
-SensorBattery::SensorBattery(EspNow *espNow) {
+SensorBattery::SensorBattery(Messenger *messenger) {
+    SensorBattery::messenger = messenger;
     SensorBattery::lastBatteryNotification = 0;
 }
 
-bool SensorBattery::get(SensorBattery **ref, DeviceType deviceType, EspNow *espNow) {
+bool SensorBattery::get(SensorBattery **ref, DeviceType deviceType, Messenger *messenger) {
     if (sensorBattery) {
         *ref = sensorBattery;
         return true;
     }
-    if (deviceType == DeviceTypeController) {
-        *ref = NULL;
-        return true;
-    }
-    sensorBattery = new SensorBattery(espNow);
+    sensorBattery = new SensorBattery(messenger);
     if (!sensorBattery->setup()) {
         sensorBattery = *ref = NULL;
         return false;
@@ -42,11 +39,7 @@ bool SensorBattery::loop() {
     if (now - lastBatteryNotification > READING_BATTERY_INTERVAL) {
         lastBatteryNotification = now;
         const float voltage = readVoltage();
-
-        EspNow *espNow;
-        EspNow::get(&espNow);
-
-        if (!espNow->sendBattery(voltage)) {
+        if (!messenger->publishBatteryVoltage(Device::get(), voltage)) {
             return false;
         }
     }
