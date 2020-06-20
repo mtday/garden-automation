@@ -5,6 +5,7 @@
 
 #include "Device.hpp"
 #include "control/ControlDripValve.hpp"
+#include "net/AutoUpdate.hpp"
 #include "net/EspNow.hpp"
 #include "net/Messenger.hpp"
 #include "net/Network.hpp"

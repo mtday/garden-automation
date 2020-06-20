@@ -71,26 +71,26 @@ bool Network::connect() {
             case WL_CONNECT_FAILED:
             case WL_CONNECTION_LOST:
             case WL_DISCONNECTED:
-                Serial.println("ERROR: Connection failed");
+                Serial.printf("ERROR: Connection failed with status %d\n", status);
                 return false;
 
             case WL_NO_SHIELD:
             case WL_SCAN_COMPLETED:
                 // not expected in `WIFI_MODE_STA`
-                Serial.println("ERROR: Connection failed, unexpected status");
+                Serial.printf("ERROR: Connection failed, unexpected status %d\n", status);
                 return false;
 
             case WL_IDLE_STATUS:
                 const ulong now = millis();
-                const ulong wait_time = now - start;
-                if (wait_time > WIFI_CONNECT_TIMEOUT) {
+                const ulong waitTime = now - start;
+                if (waitTime > WIFI_CONNECT_TIMEOUT) {
                     // already waited too long
                     Serial.println("ERROR: Connection failed, timed out");
                     WiFi.disconnect();
                     return false;
                 }
                 // delay a little to wait for connection
-                delay(WIFI_CONNECT_TIMEOUT - wait_time > 10 ? 10 : WIFI_CONNECT_TIMEOUT - wait_time);
+                delay(WIFI_CONNECT_TIMEOUT - waitTime > 10 ? 10 : WIFI_CONNECT_TIMEOUT - waitTime);
         }
     } while (true);
 }
