@@ -14,7 +14,7 @@ bool SensorLight::get(SensorLight **ref, DeviceType deviceType) {
         *ref = sensorLight;
         return true;
     }
-    if (deviceType != DeviceTypeWeather) {
+    if (!TEST_MODE && deviceType != DeviceTypeWeather) {
         *ref = NULL;
         return true;
     }
@@ -29,11 +29,17 @@ bool SensorLight::get(SensorLight **ref, DeviceType deviceType) {
 
 bool SensorLight::setup() {
     Serial.println("INFO:  Initializing Light sensor");
+    if (!TEST_MODE) {
+        // TODO
+    }
     return true;
 }
 
 float SensorLight::readLight() {
-    const float light = 0.0;
+    float light = 23.45;
+    if (!TEST_MODE) {
+        // TODO
+    }
     Serial.printf("INFO:  Light sensor read light: %f\n", light);
     return light;
 }

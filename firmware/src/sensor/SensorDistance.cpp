@@ -16,7 +16,7 @@ bool SensorDistance::get(SensorDistance **ref, DeviceType deviceType, SensorWeat
         *ref = sensorDistance;
         return true;
     }
-    if (deviceType != DeviceTypeTankGroup) {
+    if (!TEST_MODE && deviceType != DeviceTypeTankGroup) {
         *ref = NULL;
         return true;
     }
@@ -31,10 +31,17 @@ bool SensorDistance::get(SensorDistance **ref, DeviceType deviceType, SensorWeat
 
 bool SensorDistance::setup() {
     Serial.println("INFO:  Initializing Distance sensor");
+    if (!TEST_MODE) {
+        // TODO
+    }
     return true;
 }
 
 float SensorDistance::readDistance(const uint8_t tank) {
+    if (TEST_MODE) {
+        return 234.56;
+    }
+
     const uint8_t pin = pins[tank];
 
     // The sensor is triggered by a HIGH pulse of 10 or more microseconds. Give a short LOW pulse

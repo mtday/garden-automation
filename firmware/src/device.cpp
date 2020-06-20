@@ -59,5 +59,5 @@ bool Device::operator==(const Device& device) const {
 }
 
 const char *Device::c_str() {
-    return (name + " (" + mac.c_str() + ")").c_str();
+    return (name + " (" + mac.c_str() + ", " + (char) type + ")").c_str();
 }

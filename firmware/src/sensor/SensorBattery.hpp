@@ -15,8 +15,8 @@ protected:
     bool setup();
 
 public:
-    SensorBattery();
-    static bool get(SensorBattery **ref, DeviceType deviceType);
+    SensorBattery(EspNow *espNow);
+    static bool get(SensorBattery **ref, DeviceType deviceType, EspNow *espNow);
 
     bool loop();
 

@@ -15,7 +15,7 @@
 #include "sensor/SensorWeather.hpp"
 
 
-static Device *device = Device::get();
+static Device *device;
 
 static EspNow *espNow;
 static Network *network;
@@ -42,6 +42,7 @@ void deepSleep(const ulong seconds) {
 
 
 void restart() {
+    Serial.flush(); 
     delay(3000);
     esp_restart();
 }
@@ -49,6 +50,12 @@ void restart() {
 
 void setup() {
     Serial.begin(SERIAL_BAUD);
+
+    device = Device::get();
+    if (!device) {
+        restart();
+    }
+
     Serial.printf("INFO:  Initializing device %s\n", device->c_str());
 
     bool initialized =
@@ -56,7 +63,7 @@ void setup() {
         Network::get(&network, device->getType()) &&
         NetworkTime::get(&networkTime, device->getType()) &&
         Messenger::get(&messenger, device->getType(), espNow) &&
-        SensorBattery::get(&sensorBattery, device->getType()) &&
+        SensorBattery::get(&sensorBattery, device->getType(), espNow) &&
         SensorWeather::get(&sensorWeather, device->getType()) &&
         SensorLight::get(&sensorLight, device->getType()) &&
         SensorDistance::get(&sensorDistance, device->getType(), sensorWeather) &&

@@ -7,20 +7,20 @@
 static SensorBattery *sensorBattery;
 
 
-SensorBattery::SensorBattery() {
+SensorBattery::SensorBattery(EspNow *espNow) {
     SensorBattery::lastBatteryNotification = 0;
 }
 
-bool SensorBattery::get(SensorBattery **ref, DeviceType deviceType) {
+bool SensorBattery::get(SensorBattery **ref, DeviceType deviceType, EspNow *espNow) {
     if (sensorBattery) {
         *ref = sensorBattery;
         return true;
     }
-    if (deviceType == DeviceTypeController) {
+    if (!TEST_MODE && deviceType == DeviceTypeController) {
         *ref = NULL;
         return true;
     }
-    sensorBattery = new SensorBattery();
+    sensorBattery = new SensorBattery(espNow);
     if (!sensorBattery->setup()) {
         sensorBattery = *ref = NULL;
         return false;
@@ -31,6 +31,9 @@ bool SensorBattery::get(SensorBattery **ref, DeviceType deviceType) {
 
 bool SensorBattery::setup() {
     Serial.println("INFO:  Initializing Battery sensor");
+    if (!TEST_MODE) {
+        // TODO
+    }
     return true;
 }
 
@@ -51,7 +54,10 @@ bool SensorBattery::loop() {
 }
 
 float SensorBattery::readVoltage() {
-    const float voltage = 0.0;
+    float voltage = 3.7;
+    if (!TEST_MODE) {
+        // TODO
+    }
     Serial.printf("INFO:  Battery sensor read voltage: %f\n", voltage);
     return voltage;
 }

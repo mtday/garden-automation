@@ -14,7 +14,7 @@ bool SensorWeather::get(SensorWeather **ref, DeviceType deviceType) {
         *ref = sensorWeather;
         return true;
     }
-    if (deviceType != DeviceTypeWeather) {
+    if (!TEST_MODE && deviceType != DeviceTypeWeather) {
         *ref = NULL;
         return true;
     }
@@ -29,7 +29,7 @@ bool SensorWeather::get(SensorWeather **ref, DeviceType deviceType) {
 
 bool SensorWeather::setup() {
     Serial.println("INFO:  Initializing Weather sensor");
-    if (!bme.begin(BME_SENSOR_ADDRESS)) {
+    if (!TEST_MODE && !bme.begin(BME_SENSOR_ADDRESS)) {
         Serial.println("ERROR: Failed to setup Weather sensor");
         return false;
     }
@@ -37,19 +37,28 @@ bool SensorWeather::setup() {
 }
 
 float SensorWeather::readTemperature() {
-    const float temperature = bme.readTemperature(); // celsius
+    float temperature = 21.34;
+    if (!TEST_MODE) {
+        temperature = bme.readTemperature(); // celsius
+    }
     Serial.printf("INFO:  Weather sensor read temperature: %f\n", temperature);
     return temperature;
 }
 
 float SensorWeather::readHumidity() {
-    const float humidity = bme.readHumidity(); // %
+    float humidity = 66.78;
+    if (!TEST_MODE) {
+        humidity = bme.readHumidity(); // %
+    }
     Serial.printf("INFO:  Weather sensor read humidity: %f\n", humidity);
     return humidity;
 }
 
 float SensorWeather::readPressure() {
-    const float pressure = bme.readPressure(); // pascals
+    float pressure = 989.12;
+    if (!TEST_MODE) {
+        pressure = bme.readPressure(); // pascals
+    }
     Serial.printf("INFO:  Weather sensor read pressure: %f\n", pressure);
     return pressure;
 }

@@ -14,7 +14,7 @@ bool ControlDripValve::get(ControlDripValve **ref, DeviceType deviceType) {
         *ref = dripValve;
         return true;
     }
-    if (deviceType != DeviceTypeDripValve) {
+    if (!TEST_MODE && deviceType != DeviceTypeDripValve) {
         *ref = NULL;
         return true;
     }
@@ -29,7 +29,9 @@ bool ControlDripValve::get(ControlDripValve **ref, DeviceType deviceType) {
 
 bool ControlDripValve::setup() {
     Serial.println("INFO:  Initializing drip valve");
-    // TODO
+    if (!TEST_MODE) {
+        // TODO
+    }
     return true;
 }
 
@@ -39,14 +41,18 @@ DripValveState ControlDripValve::getState() {
 
 bool ControlDripValve::open() {
     Serial.println("INFO:  Opening drip valve");
-    // TODO
+    if (!TEST_MODE) {
+        // TODO
+    }
     currentState = DripValveStateOpen;
     return true;
 }
 
 bool ControlDripValve::close() {
     Serial.println("INFO:  Closing drip valve");
-    // TODO
+    if (!TEST_MODE) {
+        // TODO
+    }
     currentState = DripValveStateClosed;
     return true;
 }
