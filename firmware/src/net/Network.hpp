@@ -5,6 +5,7 @@
 
 #include <stdint.h>
 #include <IPAddress.h>
+#include "Device.hpp"
 
 
 class Network {
@@ -12,16 +13,17 @@ private:
     IPAddress ip;
 
 protected:
+    bool setup();
+
     bool isConnected();
     bool connect();
 
 public:
     Network();
-    static Network *get();
+    static bool get(Network **ref, DeviceType deviceType);
 
     IPAddress getIp();
 
-    bool setup();
     bool loop();
 };
 

@@ -9,13 +9,29 @@ ControlDripValve::ControlDripValve() {
     currentState = DripValveStateClosed;
 }
 
-ControlDripValve *ControlDripValve::get() {
-    if (!dripValve) {
-        dripValve = new ControlDripValve();
+bool ControlDripValve::get(ControlDripValve **ref, DeviceType deviceType) {
+    if (dripValve) {
+        *ref = dripValve;
+        return true;
     }
-    return dripValve;
+    if (deviceType != DeviceTypeDripValve) {
+        *ref = NULL;
+        return true;
+    }
+    dripValve = new ControlDripValve();
+    if (!dripValve->setup()) {
+        dripValve = *ref = NULL;
+        return false;
+    }
+    *ref = dripValve;
+    return true;
 }
 
+bool ControlDripValve::setup() {
+    Serial.println("INFO:  Initializing drip valve");
+    // TODO
+    return true;
+}
 
 DripValveState ControlDripValve::getState() {
     return currentState;

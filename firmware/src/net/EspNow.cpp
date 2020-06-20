@@ -1,8 +1,8 @@
 
 #include <Arduino.h>
 #include <WiFi.h>
-#include "Runner.hpp"
 #include "net/EspNow.hpp"
+#include "net/Messenger.hpp"
 
 
 static EspNow *espNow;
@@ -10,11 +10,18 @@ static EspNow *espNow;
 EspNow::EspNow() {
 }
 
-EspNow *EspNow::get() {
-    if (!espNow) {
-        espNow = new EspNow();
+bool EspNow::get(EspNow **ref) {
+    if (espNow) {
+        *ref = espNow;
+        return true;
     }
-    return espNow;
+    espNow = new EspNow();
+    if (!espNow->setup()) {
+        espNow = *ref = NULL;
+        return false;
+    }
+    *ref = espNow;
+    return true;
 }
 
 bool EspNow::setup() {
@@ -131,7 +138,7 @@ void EspNow::recv(const uint8_t *mac, const uint8_t *payload, const int size) {
             }
             BatteryData batteryData;
             memcpy(&batteryData, payload + 1, size - 1);
-            EspNow::get()->recvBattery(source, batteryData.voltage);
+            espNow->recvBattery(source, batteryData.voltage);
             break;
         }
 
@@ -142,7 +149,7 @@ void EspNow::recv(const uint8_t *mac, const uint8_t *payload, const int size) {
             }
             WeatherData weatherData;
             memcpy(&weatherData, payload + 1, size - 1);
-            EspNow::get()->recvWeather(source, weatherData.temperature, weatherData.humidity, weatherData.pressure);
+            espNow->recvWeather(source, weatherData.temperature, weatherData.humidity, weatherData.pressure);
             break;
         }
 
@@ -153,7 +160,7 @@ void EspNow::recv(const uint8_t *mac, const uint8_t *payload, const int size) {
             }
             LightData lightData;
             memcpy(&lightData, payload + 1, size - 1);
-            EspNow::get()->recvLight(source, lightData.light);
+            espNow->recvLight(source, lightData.light);
             break;
         }
 
@@ -164,7 +171,7 @@ void EspNow::recv(const uint8_t *mac, const uint8_t *payload, const int size) {
             }
             TankData tankData;
             memcpy(&tankData, payload + 1, size - 1);
-            EspNow::get()->recvTankDistance(source, tankData.tank, tankData.distance);
+            espNow->recvTankDistance(source, tankData.tank, tankData.distance);
             break;
         }
 
@@ -175,7 +182,7 @@ void EspNow::recv(const uint8_t *mac, const uint8_t *payload, const int size) {
             }
             DripValveData dripValveData;
             memcpy(&dripValveData, payload + 1, size - 1);
-            EspNow::get()->recvDripValve(source, dripValveData.state);
+            espNow->recvDripValve(source, dripValveData.state);
             break;
         }
 
@@ -186,7 +193,7 @@ void EspNow::recv(const uint8_t *mac, const uint8_t *payload, const int size) {
             }
             DripValveControlData dripValveControlData;
             memcpy(&dripValveControlData, payload + 1, size - 1);
-            EspNow::get()->recvDripValveControl(source, dripValveControlData.state);
+            espNow->recvDripValveControl(source, dripValveControlData.state);
             break;
         }
 
@@ -198,54 +205,95 @@ void EspNow::recv(const uint8_t *mac, const uint8_t *payload, const int size) {
 
 bool EspNow::recvBattery(Device *source, const float voltage) {
     Serial.printf("INFO:  Received battery data from %s: %f\n", source->c_str(), voltage);
-    return Messenger::get()->publishBatteryVoltage(source, voltage);
+    Messenger *messenger;
+    if (Messenger::get(&messenger, Device::get()->getType(), espNow)) {
+        return messenger->publishBatteryVoltage(source, voltage);
+    } else {
+        Serial.println("ERROR: Failed to retrieve messenger");
+        return false;
+    }
 }
 
 bool EspNow::recvWeather(Device *source, const float temperature, const float humidity, const float pressure) {
     Serial.printf("INFO:  Received weather data from %s: %f, %f, %f\n",
             source->c_str(), temperature, humidity, pressure);
-    return Messenger::get()->publishWeatherTemperature(source, temperature)
-            && Messenger::get()->publishWeatherHumidity(source, humidity)
-            && Messenger::get()->publishWeatherPressure(source, pressure);
+    Messenger *messenger;
+    if (Messenger::get(&messenger, Device::get()->getType(), espNow)) {
+        return messenger->publishWeatherTemperature(source, temperature)
+                && messenger->publishWeatherHumidity(source, humidity)
+                && messenger->publishWeatherPressure(source, pressure);
+    } else {
+        Serial.println("ERROR: Failed to retrieve messenger");
+        return false;
+    }
 }
 
 bool EspNow::recvLight(Device *source, const float light) {
     Serial.printf("INFO:  Received light data from %s: %f\n", source->c_str(), light);
-    return Messenger::get()->publishWeatherLight(source, light);
+    Messenger *messenger;
+    if (Messenger::get(&messenger, Device::get()->getType(), espNow)) {
+        return messenger->publishWeatherLight(source, light);
+    } else {
+        Serial.println("ERROR: Failed to retrieve messenger");
+        return false;
+    }
 }
 
 bool EspNow::recvTankDistance(Device *source, const uint8_t tank, const float distance) {
     Serial.printf("INFO:  Received tank %d data from %s: %f\n", tank, source->c_str(), distance);
-    return Messenger::get()->publishTankDistance(source, tank, distance);
+    Messenger *messenger;
+    if (Messenger::get(&messenger, Device::get()->getType(), espNow)) {
+        return messenger->publishTankDistance(source, tank, distance);
+    } else {
+        Serial.println("ERROR: Failed to retrieve messenger");
+        return false;
+    }
 }
 
 bool EspNow::recvDripValve(Device *source, const DripValveState state)
 {
     Serial.printf("INFO:  Received drip valve data from %s: %s\n", source->c_str(), state ? "opened" : "closed");
-    return Messenger::get()->publishDripValveState(source, state);
+    Messenger *messenger;
+    if (Messenger::get(&messenger, Device::get()->getType(), espNow)) {
+        return messenger->publishDripValveState(source, state);
+    } else {
+        Serial.println("ERROR: Failed to retrieve messenger");
+        return false;
+    }
 }
 
 bool EspNow::recvDripValveControl(Device *source, const DripValveState state) {
     Serial.printf("INFO:  Received drip valve control from %s: %s\n", source->c_str(), state ? "open" : "close");
-    ControlDripValve *dripValve = ControlDripValve::get();
+    ControlDripValve *dripValve;
+    if (!ControlDripValve::get(&dripValve, Device::get()->getType())) {
+        Serial.println("ERROR: Failed to retrieve drip valve");
+        return false;
+    }
     switch (state) {
         case DripValveStateOpen: {
             if (dripValve->getState() == DripValveStateOpen) {
                 // Already open
-                return EspNow::get()->sendDripValve(dripValve->getState());
+                Serial.println("WARN:  Received drip valve open request, but already open");
+                return espNow->sendDripValve(dripValve->getState());
             } else if (dripValve->open()) {
                 // Opened
-                if (!EspNow::get()->sendDripValve(dripValve->getState())) {
+                Serial.println("INFO:  Drip valve successfully opened");
+                if (!espNow->sendDripValve(dripValve->getState())) {
                     // Failed to notify that drip valve was opened, close it back to be safe
                     Serial.println("ERROR: Failed to notify of opened drip valve, closing the valve");
-                    dripValve->close();
+                    if (dripValve->close()) {
+                        Serial.println("INFO:  Drip valve successfully closed");
+                    } else {
+                        Serial.println("WARN:  Failed to close drip valve");
+                    }
                     return false;
                 } else {
                     return true;
                 }
             } else {
                 // Failed to open
-                EspNow::get()->sendDripValve(dripValve->getState());
+                Serial.println("ERROR: Received drip valve open request, and failed to open");
+                espNow->sendDripValve(dripValve->getState());
                 return false;
             }
         }
@@ -253,13 +301,16 @@ bool EspNow::recvDripValveControl(Device *source, const DripValveState state) {
         case DripValveStateClosed: {
             if (dripValve->getState() == DripValveStateClosed) {
                 // Already closed
-                return EspNow::get()->sendDripValve(dripValve->getState());
+                Serial.println("WARN:  Received drip valve close request, but already closed");
+                return espNow->sendDripValve(dripValve->getState());
             } else if (dripValve->close()) {
                 // Closed
-                return EspNow::get()->sendDripValve(dripValve->getState());
+                Serial.println("INFO:  Drip valve successfully closed");
+                return espNow->sendDripValve(dripValve->getState());
             } else {
                 // Failed to close
-                EspNow::get()->sendDripValve(dripValve->getState());
+                Serial.println("ERROR: Received drip valve close request, and failed to close");
+                espNow->sendDripValve(dripValve->getState());
                 return false;
             }
         }

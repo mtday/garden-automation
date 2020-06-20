@@ -10,11 +10,22 @@ static Network *network;
 Network::Network() {
 }
 
-Network *Network::get() {
-    if (!network) {
-        network = new Network();
+bool Network::get(Network **ref, DeviceType deviceType) {
+    if (network) {
+        *ref = network;
+        return true;
     }
-    return network;
+    if (deviceType != DeviceTypeController) {
+        *ref = NULL;
+        return true;
+    }
+    network = new Network();
+    if (!network->setup()) {
+        network = *ref = NULL;
+        return false;
+    }
+    *ref = network;
+    return true;
 }
 
 IPAddress Network::getIp() {
@@ -26,8 +37,9 @@ bool Network::setup() {
 }
 
 bool Network::loop() {
-    if (!isConnected()) {
-        return connect();
+    if (!isConnected() && !connect()) {
+        Serial.println("ERROR: Failed to reconnect to WiFi network");
+        return false;
     }
     return true;
 }

@@ -54,11 +54,12 @@ enum MessageType {
 
 
 class EspNow {
+protected:
+    bool setup();
+
 public:
     EspNow();
-    static EspNow *get();
-
-    bool setup();
+    static bool get(EspNow **ref);
 
     bool sendBattery(const float voltage);
     bool sendWeather(const float temperature, const float humidity, const float pressure);

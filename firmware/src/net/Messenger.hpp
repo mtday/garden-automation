@@ -5,11 +5,16 @@
 
 #include <ArduinoJson.h>
 #include <PubSubClient.h>
+#include <stdint.h>
+#include "Device.hpp"
+#include "net/EspNow.hpp"
 #include "control/ControlDripValve.hpp"
 
 
 class Messenger {
 private:
+    EspNow *espNow;
+
     PubSubClient mqttClient;
     ulong lastHeartbeat;
 
@@ -17,16 +22,17 @@ protected:
     bool isConnected();
     bool connect();
 
+    bool setup();
+
     bool subscribe(const String topic);
     bool unsubscribe(const String topic);
     bool publish(const String topic, const StaticJsonDocument<1024> message);
     static void callback(char *topic, uint8_t *payload, uint length);
 
 public:
-    Messenger();
-    static Messenger *get();
+    Messenger(EspNow *espNow);
+    static bool get(Messenger **ref, DeviceType deviceType, EspNow *espNow);
 
-    bool setup();
     bool loop();
 
     bool handleMessage(String topic, StaticJsonDocument<1024> message);

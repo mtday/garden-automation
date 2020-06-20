@@ -7,21 +7,32 @@
 static const uint8_t pins[] = HCSR_PINS;
 static SensorDistance *sensorDistance;
 
-SensorDistance::SensorDistance() {
+SensorDistance::SensorDistance(SensorWeather *sensorWeather) {
+    SensorDistance::sensorWeather = sensorWeather;
 }
 
-SensorDistance *SensorDistance::get() {
-    if (!sensorDistance) {
-        sensorDistance = new SensorDistance();
+bool SensorDistance::get(SensorDistance **ref, DeviceType deviceType, SensorWeather *sensorWeather) {
+    if (sensorDistance) {
+        *ref = sensorDistance;
+        return true;
     }
-    return sensorDistance;
+    if (deviceType != DeviceTypeTankGroup) {
+        *ref = NULL;
+        return true;
+    }
+    sensorDistance = new SensorDistance(sensorWeather);
+    if (!sensorDistance->setup()) {
+        sensorDistance = *ref = NULL;
+        return false;
+    }
+    *ref = sensorDistance;
+    return true;
 }
 
 bool SensorDistance::setup() {
     Serial.println("INFO:  Initializing Distance sensor");
     return true;
 }
-
 
 float SensorDistance::readDistance(const uint8_t tank) {
     const uint8_t pin = pins[tank];
@@ -40,8 +51,8 @@ float SensorDistance::readDistance(const uint8_t tank) {
     pinMode(pin, INPUT);
     const ulong duration = pulseIn(pin, HIGH);
 
-    float temp = SensorWeather::get()->readTemperature();
-    float hum = SensorWeather::get()->readHumidity();
+    float temp = sensorWeather->readTemperature();
+    float hum = sensorWeather->readHumidity();
     float speedOfSound = 0.03314 + (0.606 * temp) + (0.0124 * hum);
 
     // divide by 2 since duration is round trip, distance in centimeters to the surface of the water

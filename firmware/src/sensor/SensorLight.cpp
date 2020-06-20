@@ -9,11 +9,22 @@ static SensorLight *sensorLight;
 SensorLight::SensorLight() {
 }
 
-SensorLight *SensorLight::get() {
-    if (!sensorLight) {
-        sensorLight = new SensorLight();
+bool SensorLight::get(SensorLight **ref, DeviceType deviceType) {
+    if (sensorLight) {
+        *ref = sensorLight;
+        return true;
     }
-    return sensorLight;
+    if (deviceType != DeviceTypeWeather) {
+        *ref = NULL;
+        return true;
+    }
+    sensorLight = new SensorLight();
+    if (!sensorLight->setup()) {
+        sensorLight = *ref = NULL;
+        return false;
+    }
+    *ref = sensorLight;
+    return true;
 }
 
 bool SensorLight::setup() {

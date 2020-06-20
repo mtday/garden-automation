@@ -4,17 +4,19 @@
 
 
 #include <Adafruit_BME280.h>
+#include "Device.hpp"
 
 
 class SensorWeather {
 private:
     Adafruit_BME280 bme;
 
+protected:
+    bool setup();
+
 public:
     SensorWeather();
-    static SensorWeather *get();
-
-    bool setup();
+    static bool get(SensorWeather **ref, DeviceType deviceType);
 
     float readTemperature();
     float readHumidity();

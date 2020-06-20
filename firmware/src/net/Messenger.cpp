@@ -3,7 +3,6 @@
 #include <ArduinoJson.h>
 #include <Ethernet.h>
 #include <PubSubClient.h>
-#include "net/EspNow.hpp"
 #include "net/Messenger.hpp"
 #include "net/NetworkTime.hpp"
 
@@ -11,7 +10,9 @@
 static Messenger *messenger;
 
 
-Messenger::Messenger() {
+Messenger::Messenger(EspNow *espNow) {
+    Messenger::espNow = espNow;
+
     IPAddress brokerIP = IPAddress();
     brokerIP.fromString(MQTT_BROKER_IP);
     EthernetClient ethernetClient;
@@ -21,11 +22,22 @@ Messenger::Messenger() {
     Messenger::mqttClient.setBufferSize(1024);
 }
 
-Messenger *Messenger::get() {
-    if (!messenger) {
-        messenger = new Messenger();
+bool Messenger::get(Messenger **ref, DeviceType deviceType, EspNow *espNow) {
+    if (messenger) {
+        *ref = messenger;
+        return true;
     }
-    return messenger;
+    if (deviceType != DeviceTypeController) {
+        *ref = NULL;
+        return true;
+    }
+    messenger = new Messenger(espNow);
+    if (!messenger->setup()) {
+        messenger = *ref = NULL;
+        return false;
+    }
+    *ref = messenger;
+    return true;
 }
 
 bool Messenger::isConnected() {
@@ -59,7 +71,11 @@ bool Messenger::loop() {
         lastHeartbeat = now;
     }
 
-    return mqttClient.loop();
+    if (!mqttClient.loop()) {
+        Serial.println("ERROR: Failed to loop MQTT broker");
+        return false;
+    }
+    return true;
 }
 
 bool Messenger::subscribe() {
@@ -77,12 +93,12 @@ void Messenger::callback(char *topic, uint8_t *payload, uint length) {
     StaticJsonDocument<1024> message;
     deserializeJson(message, payload, length);
 
-    Messenger::get()->handleMessage(String(topic), message);
+    messenger->handleMessage(String(topic), message);
 }
 
 bool Messenger::handleMessage(String topic, StaticJsonDocument<1024> message) {
     if (topic == TOPIC_VALVE_DRIP_CONTROL) {
-        return EspNow::get()->sendDripValveControl(message["state"]);
+        return espNow->sendDripValveControl(message["state"]);
     } else {
         Serial.printf("ERROR: Received message on unsupported topic: %s\n", topic.c_str());
         return false;
@@ -94,6 +110,14 @@ bool Messenger::publish(String topic, StaticJsonDocument<1024> message) {
         return false;
     }
 
+    NetworkTime *networkTime;
+    if (!NetworkTime::get(&networkTime, Device::get()->getType())) {
+        Serial.println("ERROR: Failed to create network time");
+        return false;
+    }
+
+    message["timestamp"] = networkTime->now();
+
     char json[1024];
     const size_t length = serializeJson(message, json);
     Serial.printf("INFO:  Sending: %s => %s\n", topic.c_str(), json);
@@ -102,14 +126,12 @@ bool Messenger::publish(String topic, StaticJsonDocument<1024> message) {
 
 bool Messenger::publishHeartbeat() {
     StaticJsonDocument<1024> message;
-    message["timestamp"] = NetworkTime::get()->now();
     return publish(String(TOPIC_HEARTBEAT), message);
 }
 
 bool Messenger::publishBatteryVoltage(Device *source, const float voltage) {
     StaticJsonDocument<1024> message;
     message["source"] = source->getMac().c_str();
-    message["timestamp"] = NetworkTime::get()->now();
     message["voltage"] = voltage;
     message["unit"] = "percent";
     return publish(String(TOPIC_SENSOR_BATTERY_VOLTAGE), message);
@@ -118,7 +140,6 @@ bool Messenger::publishBatteryVoltage(Device *source, const float voltage) {
 bool Messenger::publishWeatherTemperature(Device *source, const float temperature) {
     StaticJsonDocument<1024> message;
     message["source"] = source->getMac().c_str();
-    message["timestamp"] = NetworkTime::get()->now();
     message["temperature"] = temperature;
     message["unit"] = "celsius";
     return publish(String(TOPIC_SENSOR_WEATHER_TEMPERATURE), message);
@@ -127,7 +148,6 @@ bool Messenger::publishWeatherTemperature(Device *source, const float temperatur
 bool Messenger::publishWeatherHumidity(Device *source, const float humidity) {
     StaticJsonDocument<1024> message;
     message["source"] = source->getMac().c_str();
-    message["timestamp"] = NetworkTime::get()->now();
     message["humidity"] = humidity;
     message["unit"] = "percent";
     return publish(String(TOPIC_SENSOR_WEATHER_HUMIDITY), message);
@@ -136,7 +156,6 @@ bool Messenger::publishWeatherHumidity(Device *source, const float humidity) {
 bool Messenger::publishWeatherPressure(Device *source, const float pressure) {
     StaticJsonDocument<1024> message;
     message["source"] = source->getMac().c_str();
-    message["timestamp"] = NetworkTime::get()->now();
     message["pressure"] = pressure;
     message["unit"] = "pascals";
     return publish(String(TOPIC_SENSOR_WEATHER_PRESSURE), message);
@@ -145,7 +164,6 @@ bool Messenger::publishWeatherPressure(Device *source, const float pressure) {
 bool Messenger::publishWeatherLight(Device *source, const float light) {
     StaticJsonDocument<1024> message;
     message["source"] = source->getMac().c_str();
-    message["timestamp"] = NetworkTime::get()->now();
     message["light"] = light;
     message["unit"] = "percent";
     return publish(String(TOPIC_SENSOR_WEATHER_LIGHT), message);
@@ -154,7 +172,6 @@ bool Messenger::publishWeatherLight(Device *source, const float light) {
 bool Messenger::publishTankDistance(Device *source, const uint8_t tank, const float distance) {
     StaticJsonDocument<1024> message;
     message["source"] = source->getMac().c_str();
-    message["timestamp"] = NetworkTime::get()->now();
     message["tank"] = tank;
     message["distance"] = distance;
     message["unit"] = "centimeters";
@@ -164,7 +181,6 @@ bool Messenger::publishTankDistance(Device *source, const uint8_t tank, const fl
 bool Messenger::publishDripValveState(Device *source, const DripValveState state) {
     StaticJsonDocument<1024> message;
     message["source"] = source->getMac().c_str();
-    message["timestamp"] = NetworkTime::get()->now();
     message["state"] = state;
     return publish(String(TOPIC_VALVE_DRIP_STATE), message);
 }

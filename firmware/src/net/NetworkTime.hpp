@@ -4,14 +4,17 @@
 
 
 #include <time.h>
+#include "Device.hpp"
 
 
 class NetworkTime {
+protected:
+    bool setup();
+
 public:
     NetworkTime();
-    static NetworkTime *get();
+    static bool get(NetworkTime **ref, DeviceType deviceType);
 
-    bool setup();
     time_t now();
 };
 

@@ -9,17 +9,28 @@ SensorWeather::SensorWeather() {
     bme = Adafruit_BME280();
 }
 
-SensorWeather *SensorWeather::get() {
-    if (!sensorWeather) {
-        sensorWeather = new SensorWeather();
+bool SensorWeather::get(SensorWeather **ref, DeviceType deviceType) {
+    if (sensorWeather) {
+        *ref = sensorWeather;
+        return true;
     }
-    return sensorWeather;
+    if (deviceType != DeviceTypeWeather) {
+        *ref = NULL;
+        return true;
+    }
+    sensorWeather = new SensorWeather();
+    if (!sensorWeather->setup()) {
+        sensorWeather = *ref = NULL;
+        return false;
+    }
+    *ref = sensorWeather;
+    return true;
 }
 
 bool SensorWeather::setup() {
     Serial.println("INFO:  Initializing Weather sensor");
     if (!bme.begin(BME_SENSOR_ADDRESS)) {
-        Serial.println("Failed to setup Weather sensor");
+        Serial.println("ERROR: Failed to setup Weather sensor");
         return false;
     }
     return true;
