@@ -26,7 +26,8 @@ static SensorWeather *sensorWeather;
 static ControlDripValve *controlDripValve;
 
 
-void deepSleep(const ulong seconds) {
+void deepSleep(const ulong seconds)
+{
     const ulong microseconds = seconds * 1000 * 1000;
     esp_sleep_enable_timer_wakeup(microseconds);
 
@@ -36,18 +37,21 @@ void deepSleep(const ulong seconds) {
 }
 
 
-void restart() {
+void restart()
+{
     Serial.flush(); 
     delay(3000);
     esp_restart();
 }
 
 
-void setup() {
+void setup()
+{
     Serial.begin(SERIAL_BAUD);
 
     device = Device::get();
-    if (!device) {
+    if (!device)
+    {
         restart();
     }
 
@@ -62,13 +66,16 @@ void setup() {
         SensorLight::get(&sensorLight, device->getType()) &&
         SensorDistance::get(&sensorDistance, device->getType(), sensorWeather) &&
         ControlDripValve::get(&controlDripValve, device->getType());
-    if (!initialized) {
+    if (!initialized)
+    {
         Serial.println("ERROR: Restarting due to setup failure");
         restart();
     }
 
-    switch (device->getType()) {
-        case DeviceTypeWeather: {
+    switch (device->getType())
+    {
+        case DeviceTypeWeather:
+        {
             Serial.println("INFO:  Performing weather readings");
             const float voltage = sensorBattery->readVoltage();
             const float temperature = sensorWeather->readTemperature();
@@ -82,28 +89,34 @@ void setup() {
                 messenger->publishWeatherHumidity(device, humidity) &&
                 messenger->publishWeatherPressure(device, pressure) &&
                 messenger->publishWeatherLight(device, light);
-            if (success) {
+            if (success)
+            {
                 restart();
             }
             deepSleep(WEATHER_SLEEP_PERIOD);
         }
 
-        case DeviceTypeTankGroup: {
+        case DeviceTypeTankGroup:
+        {
             Serial.println("INFO:  Performing tank readings");
             const float voltage = sensorBattery->readVoltage();
-            if (!messenger->publishBatteryVoltage(device, voltage)) {
+            if (!messenger->publishBatteryVoltage(device, voltage))
+            {
                 restart();
             }
-            for (int tank = 0; tank < NUM_TANKS; tank++) {
+            for (int tank = 0; tank < NUM_TANKS; tank++)
+            {
                 const float distance = sensorDistance->readDistance(tank);
-                if (!messenger->publishTankDistance(device, tank, distance)) {
+                if (!messenger->publishTankDistance(device, tank, distance))
+                {
                     restart();
                 }
             }
             deepSleep(TANK_SLEEP_PERIOD);
         }
 
-        case DeviceTypeDripValve: {
+        case DeviceTypeDripValve:
+        {
             Serial.println("INFO:  Drip valve initialized, waiting for control requests");
         }
 
@@ -113,12 +126,14 @@ void setup() {
     }
 }
 
-void loop() {
+void loop()
+{
     bool success =
         network->loop() &&
         messenger->loop() &&
         (!sensorBattery || sensorBattery->loop());
-    if (!success) {
+    if (!success)
+    {
         restart();
     }
 }

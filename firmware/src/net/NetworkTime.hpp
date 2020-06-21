@@ -7,7 +7,8 @@
 #include "Device.hpp"
 
 
-class NetworkTime {
+class NetworkTime
+{
 protected:
     bool setup();
 

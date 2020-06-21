@@ -7,16 +7,20 @@
 
 static Network *network;
 
-Network::Network() {
+Network::Network()
+{
 }
 
-bool Network::get(Network **ref) {
-    if (network) {
+bool Network::get(Network **ref)
+{
+    if (network)
+    {
         *ref = network;
         return true;
     }
     network = new Network();
-    if (!network->setup()) {
+    if (!network->setup())
+    {
         network = *ref = NULL;
         return false;
     }
@@ -24,37 +28,46 @@ bool Network::get(Network **ref) {
     return true;
 }
 
-IPAddress Network::getIp() {
+IPAddress Network::getIp()
+{
     return ip;
 }
 
-bool Network::setup() {
+bool Network::setup()
+{
     return connect();
 }
 
-bool Network::loop() {
-    if (!isConnected() && !connect()) {
+bool Network::loop()
+{
+    if (!isConnected() && !connect())
+    {
         Serial.println("ERROR: Failed to reconnect to WiFi network");
         return false;
     }
     return true;
 }
 
-bool Network::isConnected() {
+bool Network::isConnected()
+{
     return WiFi.status() == WL_CONNECTED;
 }
 
-bool Network::connect() {
-    if (isConnected()) {
+bool Network::connect()
+{
+    if (isConnected())
+    {
         return true;
     }
 
     Serial.printf("INFO:  Connecting to WiFi network: %s\n", WIFI_SSID);
     WiFi.mode(WIFI_MODE_STA);
     const ulong start = millis();
-    do {
+    do
+    {
         const wl_status_t status = WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
-        switch (status) {
+        switch (status)
+        {
             case WL_CONNECTED:
                 ip = WiFi.localIP();
                 uint8_t mac[6];
@@ -79,7 +92,8 @@ bool Network::connect() {
             case WL_IDLE_STATUS:
                 const ulong now = millis();
                 const ulong waitTime = now - start;
-                if (waitTime > WIFI_CONNECT_TIMEOUT) {
+                if (waitTime > WIFI_CONNECT_TIMEOUT)
+                {
                     // already waited too long
                     Serial.println("ERROR: WiFi connection failed, timed out");
                     WiFi.disconnect();

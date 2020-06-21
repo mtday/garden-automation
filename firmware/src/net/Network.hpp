@@ -8,7 +8,8 @@
 #include "Device.hpp"
 
 
-class Network {
+class Network
+{
 private:
     IPAddress ip;
 

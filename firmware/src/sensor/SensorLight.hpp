@@ -6,7 +6,8 @@
 #include "Device.hpp"
 
 
-class SensorLight {
+class SensorLight
+{
 protected:
     bool setup();
 

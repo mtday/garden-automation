@@ -6,13 +6,15 @@
 #include "Device.hpp"
 
 
-enum DripValveState {
+enum DripValveState
+{
     DripValveStateClosed = 0,
     DripValveStateOpen   = 1
 };
 
 
-class ControlDripValve {
+class ControlDripValve
+{
 private:
     DripValveState currentState;
 

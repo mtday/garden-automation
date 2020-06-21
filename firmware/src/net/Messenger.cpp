@@ -11,7 +11,8 @@
 static Messenger *messenger;
 
 
-Messenger::Messenger(NetworkTime *networkTime) {
+Messenger::Messenger(NetworkTime *networkTime)
+{
     Messenger::networkTime = networkTime;
 
     IPAddress brokerIP = IPAddress();
@@ -23,13 +24,16 @@ Messenger::Messenger(NetworkTime *networkTime) {
     Messenger::mqttClient.setBufferSize(1024);
 }
 
-bool Messenger::get(Messenger **ref, NetworkTime *networkTime) {
-    if (messenger) {
+bool Messenger::get(Messenger **ref, NetworkTime *networkTime)
+{
+    if (messenger)
+    {
         *ref = messenger;
         return true;
     }
     messenger = new Messenger(networkTime);
-    if (!messenger->setup()) {
+    if (!messenger->setup())
+    {
         messenger = *ref = NULL;
         return false;
     }
@@ -37,13 +41,16 @@ bool Messenger::get(Messenger **ref, NetworkTime *networkTime) {
     return true;
 }
 
-bool Messenger::isConnected() {
+bool Messenger::isConnected()
+{
     return mqttClient.connected();
 }
 
-bool Messenger::connect() {
+bool Messenger::connect()
+{
     Serial.println("INFO:  Connecting to MQTT broker");
-    if (!isConnected() && mqttClient.connect(MQTT_CLIENT_ID)) {
+    if (!isConnected() && mqttClient.connect(MQTT_CLIENT_ID))
+    {
         Serial.println("INFO:  Connected");
         return true;
     }
@@ -51,42 +58,53 @@ bool Messenger::connect() {
     return false;
 }
 
-bool Messenger::setup() {
+bool Messenger::setup()
+{
     Serial.println("INFO:  Initializing connection to MQTT broker");
-    if (!isConnected() && !connect()) {
+    if (!isConnected() && !connect())
+    {
         Serial.println("ERROR: Failed to connect to MQTT broker");
         return false;
     }
 
-    if (Device::get()->getType() == DeviceTypeTankGroup) {
+    if (Device::get()->getType() == DeviceTypeTankGroup)
+    {
         return subscribe(TOPIC_VALVE_DRIP_CONTROL);
-    } else {
+    }
+    else
+    {
         // No need to subscribe to any topics
         return true;
     }
 }
 
-bool Messenger::loop() {
-    if (!isConnected() && !connect()) {
+bool Messenger::loop()
+{
+    if (!isConnected() && !connect())
+    {
         Serial.println("ERROR: Failed to reconnect to MQTT broker");
         return false;
     }
 
-    if (!mqttClient.loop()) {
+    if (!mqttClient.loop())
+    {
         Serial.println("ERROR: Failed to loop MQTT broker");
         return false;
     }
     return true;
 }
 
-bool Messenger::subscribe(String topic) {
-    if (!isConnected() && !connect()) {
+bool Messenger::subscribe(String topic)
+{
+    if (!isConnected() && !connect())
+    {
         return false;
     }
     return mqttClient.subscribe(topic.c_str());
 }
 
-void Messenger::callback(char *topic, uint8_t *payload, uint length) {
+void Messenger::callback(char *topic, uint8_t *payload, uint length)
+{
     char m[length + 1];
     snprintf(m, length, "%s", payload);
     Serial.printf("INFO:  Received: %s => %s\n", topic, m);
@@ -97,36 +115,52 @@ void Messenger::callback(char *topic, uint8_t *payload, uint length) {
     messenger->handleMessage(String(topic), message);
 }
 
-bool Messenger::handleMessage(String topic, StaticJsonDocument<1024> message) {
-    if (topic == TOPIC_VALVE_DRIP_CONTROL) {
+bool Messenger::handleMessage(String topic, StaticJsonDocument<1024> message)
+{
+    if (topic == TOPIC_VALVE_DRIP_CONTROL)
+    {
         ControlDripValve *dripValve;
-        if (!ControlDripValve::get(&dripValve, Device::get()->getType())) {
+        if (!ControlDripValve::get(&dripValve, Device::get()->getType()))
+        {
             Serial.println("ERROR: Failed to create drip valve");
             return false;
         }
         const DripValveState state = message["state"];
-        switch (state) {
-            case DripValveStateOpen: {
-                if (dripValve->getState() == DripValveStateOpen) {
+        switch (state)
+        {
+            case DripValveStateOpen:
+            {
+                if (dripValve->getState() == DripValveStateOpen)
+                {
                     // Already open
                     Serial.println("WARN:  Received drip valve open request, but already open");
                     return publishDripValveState(Device::get(), dripValve->getState());
-                } else if (dripValve->open()) {
+                }
+                else if (dripValve->open())
+                {
                     // Opened
                     Serial.println("INFO:  Drip valve successfully opened");
-                    if (!publishDripValveState(Device::get(), dripValve->getState())) {
+                    if (!publishDripValveState(Device::get(), dripValve->getState()))
+                    {
                         // Failed to notify that drip valve was opened, close it back to be safe
                         Serial.println("ERROR: Failed to notify of opened drip valve, closing the valve");
-                        if (dripValve->close()) {
+                        if (dripValve->close())
+                        {
                             Serial.println("INFO:  Drip valve successfully closed");
-                        } else {
+                        }
+                        else
+                        {
                             Serial.println("WARN:  Failed to close drip valve");
                         }
                         return false;
-                    } else {
+                    }
+                    else
+                    {
                         return true;
                     }
-                } else {
+                }
+                else
+                {
                     // Failed to open
                     Serial.println("ERROR: Received drip valve open request, and failed to open");
                     publishDripValveState(Device::get(), dripValve->getState());
@@ -134,16 +168,22 @@ bool Messenger::handleMessage(String topic, StaticJsonDocument<1024> message) {
                 }
             }
     
-            case DripValveStateClosed: {
-                if (dripValve->getState() == DripValveStateClosed) {
+            case DripValveStateClosed:
+            {
+                if (dripValve->getState() == DripValveStateClosed)
+                {
                     // Already closed
                     Serial.println("WARN:  Received drip valve close request, but already closed");
                     return publishDripValveState(Device::get(), dripValve->getState());
-                } else if (dripValve->close()) {
+                }
+                else if (dripValve->close())
+                {
                     // Closed
                     Serial.println("INFO:  Drip valve successfully closed");
                     return publishDripValveState(Device::get(), dripValve->getState());
-                } else {
+                }
+                else
+                {
                     // Failed to close
                     Serial.println("ERROR: Received drip valve close request, and failed to close");
                     publishDripValveState(Device::get(), dripValve->getState());
@@ -151,15 +191,19 @@ bool Messenger::handleMessage(String topic, StaticJsonDocument<1024> message) {
                 }
             }
         }
-    } else {
+    }
+    else
+    {
         Serial.printf("ERROR: Received message on unsupported topic: %s\n", topic.c_str());
         return false;
     }
     return true;
 }
 
-bool Messenger::publish(String topic, StaticJsonDocument<1024> message) {
-    if (!isConnected() && !connect()) {
+bool Messenger::publish(String topic, StaticJsonDocument<1024> message)
+{
+    if (!isConnected() && !connect())
+    {
         return false;
     }
 
@@ -169,7 +213,8 @@ bool Messenger::publish(String topic, StaticJsonDocument<1024> message) {
     return mqttClient.publish(topic.c_str(), json, length);
 }
 
-bool Messenger::publishBatteryVoltage(Device *source, const float voltage) {
+bool Messenger::publishBatteryVoltage(Device *source, const float voltage)
+{
     StaticJsonDocument<1024> message;
     message["source"] = source->getMac().c_str();
     message["voltage"] = voltage;
@@ -178,7 +223,8 @@ bool Messenger::publishBatteryVoltage(Device *source, const float voltage) {
     return publish(String(TOPIC_SENSOR_BATTERY_VOLTAGE), message);
 }
 
-bool Messenger::publishWeatherTemperature(Device *source, const float temperature) {
+bool Messenger::publishWeatherTemperature(Device *source, const float temperature)
+{
     StaticJsonDocument<1024> message;
     message["source"] = source->getMac().c_str();
     message["temperature"] = temperature;
@@ -187,7 +233,8 @@ bool Messenger::publishWeatherTemperature(Device *source, const float temperatur
     return publish(String(TOPIC_SENSOR_WEATHER_TEMPERATURE), message);
 }
 
-bool Messenger::publishWeatherHumidity(Device *source, const float humidity) {
+bool Messenger::publishWeatherHumidity(Device *source, const float humidity)
+{
     StaticJsonDocument<1024> message;
     message["source"] = source->getMac().c_str();
     message["humidity"] = humidity;
@@ -196,7 +243,8 @@ bool Messenger::publishWeatherHumidity(Device *source, const float humidity) {
     return publish(String(TOPIC_SENSOR_WEATHER_HUMIDITY), message);
 }
 
-bool Messenger::publishWeatherPressure(Device *source, const float pressure) {
+bool Messenger::publishWeatherPressure(Device *source, const float pressure)
+{
     StaticJsonDocument<1024> message;
     message["source"] = source->getMac().c_str();
     message["pressure"] = pressure;
@@ -205,7 +253,8 @@ bool Messenger::publishWeatherPressure(Device *source, const float pressure) {
     return publish(String(TOPIC_SENSOR_WEATHER_PRESSURE), message);
 }
 
-bool Messenger::publishWeatherLight(Device *source, const float light) {
+bool Messenger::publishWeatherLight(Device *source, const float light)
+{
     StaticJsonDocument<1024> message;
     message["source"] = source->getMac().c_str();
     message["light"] = light;
@@ -214,7 +263,8 @@ bool Messenger::publishWeatherLight(Device *source, const float light) {
     return publish(String(TOPIC_SENSOR_WEATHER_LIGHT), message);
 }
 
-bool Messenger::publishTankDistance(Device *source, const uint8_t tank, const float distance) {
+bool Messenger::publishTankDistance(Device *source, const uint8_t tank, const float distance)
+{
     StaticJsonDocument<1024> message;
     message["source"] = source->getMac().c_str();
     message["tank"] = tank;
@@ -224,7 +274,8 @@ bool Messenger::publishTankDistance(Device *source, const uint8_t tank, const fl
     return publish(String(TOPIC_SENSOR_TANK_DISTANCE), message);
 }
 
-bool Messenger::publishDripValveState(Device *source, const DripValveState state) {
+bool Messenger::publishDripValveState(Device *source, const DripValveState state)
+{
     StaticJsonDocument<1024> message;
     message["source"] = source->getMac().c_str();
     message["state"] = state;

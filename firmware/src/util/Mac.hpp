@@ -7,7 +7,8 @@
 #include <WString.h>
 
 
-class Mac {
+class Mac
+{
 private:
     uint8_t bytes[6];
     String str;

@@ -11,7 +11,8 @@
 #include "net/NetworkTime.hpp"
 
 
-class Messenger {
+class Messenger
+{
 private:
     NetworkTime *networkTime;
     PubSubClient mqttClient;
