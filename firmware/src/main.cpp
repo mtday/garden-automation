@@ -5,7 +5,6 @@
 
 #include "Device.hpp"
 #include "control/ControlDripValve.hpp"
-#include "net/AutoUpdate.hpp"
 #include "net/Messenger.hpp"
 #include "net/Network.hpp"
 #include "net/NetworkTime.hpp"
@@ -18,7 +17,6 @@
 static Device *device;
 
 static Network *network;
-static AutoUpdate *autoUpdate;
 static NetworkTime *networkTime;
 static Messenger *messenger;
 static SensorBattery *sensorBattery;
@@ -57,7 +55,6 @@ void setup() {
 
     bool initialized =
         Network::get(&network) &&
-        AutoUpdate::get(&autoUpdate) &&
         NetworkTime::get(&networkTime) &&
         Messenger::get(&messenger, networkTime) &&
         SensorBattery::get(&sensorBattery, device->getType(), messenger) &&
@@ -119,7 +116,6 @@ void setup() {
 void loop() {
     bool success =
         network->loop() &&
-        autoUpdate->loop() &&
         messenger->loop() &&
         (!sensorBattery || sensorBattery->loop());
     if (!success) {
