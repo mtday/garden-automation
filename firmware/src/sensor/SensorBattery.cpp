@@ -1,26 +1,25 @@
 
 #include <Arduino.h>
-#include "net/Messenger.hpp"
 #include "sensor/SensorBattery.hpp"
 
 
 static SensorBattery *sensorBattery;
 
 
-SensorBattery::SensorBattery(Messenger *messenger)
+SensorBattery::SensorBattery(RestClient *restClient)
 {
-    SensorBattery::messenger = messenger;
+    SensorBattery::restClient = restClient;
     SensorBattery::lastBatteryNotification = 0;
 }
 
-bool SensorBattery::get(SensorBattery **ref, DeviceType deviceType, Messenger *messenger)
+bool SensorBattery::get(SensorBattery **ref, DeviceType deviceType, RestClient *restClient)
 {
     if (sensorBattery)
     {
         *ref = sensorBattery;
         return true;
     }
-    sensorBattery = new SensorBattery(messenger);
+    sensorBattery = new SensorBattery(restClient);
     if (!sensorBattery->setup())
     {
         sensorBattery = *ref = NULL;
@@ -47,7 +46,7 @@ bool SensorBattery::loop()
     {
         lastBatteryNotification = now;
         const float voltage = readVoltage();
-        if (!messenger->publishBatteryVoltage(Device::get(), voltage))
+        if (!restClient->publishBatteryVoltage(Device::get(), voltage))
         {
             return false;
         }

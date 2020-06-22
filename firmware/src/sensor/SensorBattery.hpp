@@ -5,20 +5,21 @@
 
 #include <stdint.h>
 #include "Device.hpp"
+#include "net/RestClient.hpp"
 
 
 class SensorBattery
 {
 private:
-    Messenger *messenger;
+    RestClient *restClient;
     ulong lastBatteryNotification;
 
 protected:
     bool setup();
 
 public:
-    SensorBattery(Messenger *messenger);
-    static bool get(SensorBattery **ref, DeviceType deviceType, Messenger *messenger);
+    SensorBattery(RestClient *restClient);
+    static bool get(SensorBattery **ref, DeviceType deviceType, RestClient *restClient);
 
     bool loop();
 

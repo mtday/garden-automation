@@ -5,9 +5,9 @@
 
 #include "Device.hpp"
 #include "control/ControlDripValve.hpp"
-#include "net/Messenger.hpp"
 #include "net/Network.hpp"
 #include "net/NetworkTime.hpp"
+#include "net/RestClient.hpp"
 #include "sensor/SensorBattery.hpp"
 #include "sensor/SensorDistance.hpp"
 #include "sensor/SensorLight.hpp"
@@ -18,7 +18,7 @@ static Device *device;
 
 static Network *network;
 static NetworkTime *networkTime;
-static Messenger *messenger;
+static RestClient *restClient;
 static SensorBattery *sensorBattery;
 static SensorDistance *sensorDistance;
 static SensorLight *sensorLight;
@@ -60,8 +60,8 @@ void setup()
     bool initialized =
         Network::get(&network) &&
         NetworkTime::get(&networkTime) &&
-        Messenger::get(&messenger, networkTime) &&
-        SensorBattery::get(&sensorBattery, device->getType(), messenger) &&
+        RestClient::get(&restClient, networkTime) &&
+        SensorBattery::get(&sensorBattery, device->getType(), restClient) &&
         SensorWeather::get(&sensorWeather, device->getType()) &&
         SensorLight::get(&sensorLight, device->getType()) &&
         SensorDistance::get(&sensorDistance, device->getType(), sensorWeather) &&
@@ -84,11 +84,11 @@ void setup()
             const float light = sensorLight->readLight();
 
             bool success =
-                messenger->publishBatteryVoltage(device, voltage) &&
-                messenger->publishWeatherTemperature(device, temperature) &&
-                messenger->publishWeatherHumidity(device, humidity) &&
-                messenger->publishWeatherPressure(device, pressure) &&
-                messenger->publishWeatherLight(device, light);
+                restClient->publishBatteryVoltage(device, voltage) &&
+                restClient->publishWeatherTemperature(device, temperature) &&
+                restClient->publishWeatherHumidity(device, humidity) &&
+                restClient->publishWeatherPressure(device, pressure) &&
+                restClient->publishWeatherLight(device, light);
             if (success)
             {
                 restart();
@@ -100,14 +100,14 @@ void setup()
         {
             Serial.println("INFO:  Performing tank readings");
             const float voltage = sensorBattery->readVoltage();
-            if (!messenger->publishBatteryVoltage(device, voltage))
+            if (!restClient->publishBatteryVoltage(device, voltage))
             {
                 restart();
             }
             for (int tank = 0; tank < NUM_TANKS; tank++)
             {
                 const float distance = sensorDistance->readDistance(tank);
-                if (!messenger->publishTankDistance(device, tank, distance))
+                if (!restClient->publishTankDistance(device, tank, distance))
                 {
                     restart();
                 }
@@ -130,7 +130,6 @@ void loop()
 {
     bool success =
         network->loop() &&
-        messenger->loop() &&
         (!sensorBattery || sensorBattery->loop());
     if (!success)
     {
