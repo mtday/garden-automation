@@ -7,7 +7,8 @@
 #include "Device.hpp"
 
 
-class SensorWeather {
+class SensorWeather
+{
 private:
     Adafruit_BME280 bme;
 

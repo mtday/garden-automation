@@ -7,14 +7,16 @@
 #include "util/Mac.hpp"
 
 
-enum DeviceType {
+enum DeviceType
+{
     DeviceTypeWeather     = 'W',
     DeviceTypeTankGroup   = 'T',
     DeviceTypeDripValve   = 'D',
 };
 
 
-class Device {
+class Device
+{
 private:
     Mac mac;
     DeviceType type;

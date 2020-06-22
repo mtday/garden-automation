@@ -7,7 +7,8 @@
 #include "sensor/SensorWeather.hpp"
 
 
-class SensorDistance {
+class SensorDistance
+{
 private:
     SensorWeather *sensorWeather;
 

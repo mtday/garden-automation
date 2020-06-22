@@ -7,7 +7,8 @@
 #include "Device.hpp"
 
 
-class SensorBattery {
+class SensorBattery
+{
 private:
     Messenger *messenger;
     ulong lastBatteryNotification;

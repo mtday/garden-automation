@@ -7,21 +7,26 @@
 static const uint8_t pins[] = HCSR_PINS;
 static SensorDistance *sensorDistance;
 
-SensorDistance::SensorDistance(SensorWeather *sensorWeather) {
+SensorDistance::SensorDistance(SensorWeather *sensorWeather)
+{
     SensorDistance::sensorWeather = sensorWeather;
 }
 
-bool SensorDistance::get(SensorDistance **ref, DeviceType deviceType, SensorWeather *sensorWeather) {
-    if (sensorDistance) {
+bool SensorDistance::get(SensorDistance **ref, DeviceType deviceType, SensorWeather *sensorWeather)
+{
+    if (sensorDistance)
+    {
         *ref = sensorDistance;
         return true;
     }
-    if (deviceType != DeviceTypeTankGroup) {
+    if (deviceType != DeviceTypeTankGroup)
+    {
         *ref = NULL;
         return true;
     }
     sensorDistance = new SensorDistance(sensorWeather);
-    if (!sensorDistance->setup()) {
+    if (!sensorDistance->setup())
+    {
         sensorDistance = *ref = NULL;
         return false;
     }
@@ -29,16 +34,20 @@ bool SensorDistance::get(SensorDistance **ref, DeviceType deviceType, SensorWeat
     return true;
 }
 
-bool SensorDistance::setup() {
+bool SensorDistance::setup()
+{
     Serial.println("INFO:  Initializing Distance sensor");
-    if (!TEST_MODE) {
+    if (!TEST_MODE)
+    {
         // TODO
     }
     return true;
 }
 
-float SensorDistance::readDistance(const uint8_t tank) {
-    if (TEST_MODE) {
+float SensorDistance::readDistance(const uint8_t tank)
+{
+    if (TEST_MODE)
+    {
         return 234.56;
     }
 

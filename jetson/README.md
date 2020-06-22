@@ -55,12 +55,6 @@ sudo reboot now
 sudo chmod 600 /etc/update-motd.d/*
 ```
 
-* Add additional hosts:
-
-```
-printf "\n192.168.10.50 broker\n" | sudo tee -a /etc/hosts
-```
-
 * Add `~/.ssh/authorized_keys` file containing a public SSH key to allow passwordless SSH into the device.
 * Add `~/.ssh/id_rsa` and `~/.ssh/id_rsa.pub` files for SSH off the device.
 * Add `~/.gitconfig` for common git aliases and user info.
@@ -92,5 +86,36 @@ sudo apt install -y apt-utils curl locate
 ```
 sudo apt install -y chrony
 sudo systemctl enable chrony.service
+sudo systemctl start chrony.service
 ```
+
+* Install and configure Mosquitto MQTT server.
+
+```
+sudo apt install -y mosquitto mosquitto-clients
+sudo systemctl enable mosquitto.service
+sudo systemctl start mosquitto.service
+```
+
+* Install and configure Node-RED:
+
+```
+bash <(curl -sL https://raw.githubusercontent.com/node-red/linux-installers/master/deb/update-nodejs-and-nodered)
+sudo systemctl enable nodered.service
+sudo systemctl start nodered.service
+```
+
+* Install and configure PostgreSQL:
+
+```
+sudo apt install -y postgresql
+sudo systemctl enable postgresql.service
+sudo systemctl start postgresql.service
+echo "CREATE DATABASE automation;" | sudo -u postgres psql
+echo "CREATE USER automation WITH ENCRYPTED PASSWORD 'automation';" | sudo -u postgres psql
+echo "GRANT ALL PRIVILEGES ON DATABASE automation TO automation;" | sudo -u postgres psql
+cat garden-automation/db/db.sql | psql -h localhost -U automation -W automation
+```
+
+
 
