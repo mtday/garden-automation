@@ -5,6 +5,7 @@
 
 #include "Device.hpp"
 #include "control/ControlDripValve.hpp"
+#include "net/EspNow.hpp"
 #include "net/Network.hpp"
 #include "net/NetworkTime.hpp"
 #include "net/RestClient.hpp"
@@ -16,6 +17,7 @@
 
 static Device *device;
 
+static EspNow *espNow;
 static Network *network;
 static NetworkTime *networkTime;
 static RestClient *restClient;
@@ -58,6 +60,7 @@ void setup()
     Serial.printf("INFO:  Initializing device %s\n", device->c_str());
 
     bool initialized =
+        EspNow::get(&espNow) &&
         Network::get(&network) &&
         NetworkTime::get(&networkTime) &&
         RestClient::get(&restClient, networkTime) &&
@@ -84,6 +87,9 @@ void setup()
             const float light = sensorLight->readLight();
 
             bool success =
+                espNow->sendBattery(voltage) &&
+                espNow->sendWeather(temperature, humidity, pressure) &&
+                espNow->sendLight(light) &&
                 restClient->publishBatteryVoltage(device, voltage) &&
                 restClient->publishWeatherTemperature(device, temperature) &&
                 restClient->publishWeatherHumidity(device, humidity) &&
@@ -100,14 +106,14 @@ void setup()
         {
             Serial.println("INFO:  Performing tank readings");
             const float voltage = sensorBattery->readVoltage();
-            if (!restClient->publishBatteryVoltage(device, voltage))
+            if (!espNow->sendBattery(voltage) || !restClient->publishBatteryVoltage(device, voltage))
             {
                 restart();
             }
             for (int tank = 0; tank < NUM_TANKS; tank++)
             {
                 const float distance = sensorDistance->readDistance(tank);
-                if (!restClient->publishTankDistance(device, tank, distance))
+                if (!espNow->sendTankDistance(tank, distance) || !restClient->publishTankDistance(device, tank, distance))
                 {
                     restart();
                 }
