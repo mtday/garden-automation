@@ -75,6 +75,12 @@ sudo apt autoremove -y
 git clone git@github.com:mtday/garden-automation.git
 ```
 
+* Build the espnow listener:
+
+```
+make -C garden-automation/jetson/espnow/
+```
+
 * Install common utilities:
 
 ```
