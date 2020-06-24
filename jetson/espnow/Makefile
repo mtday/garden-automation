@@ -1,6 +1,6 @@
 
-CC = gcc
-CFLAGS = -g -Wall
+CC = g++
+CFLAGS = -g -Wall -std=c++11
 
 default: all
 
@@ -8,7 +8,7 @@ default: all
 	$(CC) $(CFLAGS) -o $@ -c $^
 
 app: main.o
-	$(CC) $(CFLAGS) -o espnow $^
+	$(CC) $(CFLAGS) -o espnow $^ -pthread
 
 
 all: clean app

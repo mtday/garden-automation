@@ -1,49 +1,82 @@
 
 #include <arpa/inet.h>
 #include <errno.h>
+#include <getopt.h>
 #include <linux/filter.h>
 #include <linux/if_packet.h>
 #include <net/ethernet.h>
 #include <net/if.h>
+#include <pthread.h>
+#include <signal.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sys/ioctl.h>
 #include <sys/socket.h>
 #include <sys/time.h>
 
 
-#define DATA_RATE_1_MBPS  0x02
-#define DATA_RATE_2_MBPS  0x04
-#define DATA_RATE_6_MBPS  0x0c
-#define DATA_RATE_9_MBPS  0x12
-#define DATA_RATE_12_MBPS 0x18
-#define DATA_RATE_18_MBPS 0x24
-#define DATA_RATE_24_MBPS 0x30
-#define DATA_RATE_36_MBPS 0x48
-#define DATA_RATE_48_MBPS 0x60
-#define DATA_RATE_54_MBPS 0x6c
-
-
-#define CHANNEL_1  2412
-#define CHANNEL_2  2417
-#define CHANNEL_3  2422
-#define CHANNEL_4  2427
-#define CHANNEL_5  2432
-#define CHANNEL_6  2437
-#define CHANNEL_7  2442
-#define CHANNEL_8  2447
-#define CHANNEL_9  2452
-#define CHANNEL_10 2457
-#define CHANNEL_11 2462
-#define CHANNEL_12 2467
-#define CHANNEL_13 2472
-
-
 #define MAX_MESSAGE_SIZE 512
 #define WLAN_LEN 24
 #define ACTIONFRAME_HEADER_LEN 8
 #define VENDORSPECIFIC_CONTENT_LEN 7
+
+
+struct options
+{
+    const char *interface;
+    int socket_priority;
+    int verbose;
+};
+
+static struct options options;
+
+int parse_options(int argc, char **argv)
+{
+    struct option long_options[] =
+    {
+        {"interface", required_argument, NULL, 'i'},
+        {"priority",  required_argument, NULL, 'p'},
+        {"verbose",   no_argument,       &options.verbose, 0},
+        {0, 0, 0, 0}
+    };
+
+    while (1)
+    {
+        int option_index = 0;
+        int c = getopt_long(argc, argv, "i:p:v", long_options, &option_index);
+
+        if (c < 0)
+        {
+            break;
+        }
+
+        switch (c)
+        {
+            case 0:
+                break;
+            case 'i':
+                options.interface = optarg;
+                break;
+            case 'p':
+                options.socket_priority = atoi(optarg);
+                break;
+            default:
+              return -1;
+        }
+    }
+
+    if (!options.interface)
+    {
+        options.interface = "wlan0";
+    }
+    if (!options.socket_priority)
+    {
+        options.socket_priority = 7;
+    }
+    return 0;
+}
 
 
 #define PACKET_FILTER_LENGTH 20
@@ -83,7 +116,10 @@ void callback(uint8_t mac[6], uint8_t *payload, int len)
     char payloadstr[len];
     snprintf(payloadstr, sizeof(payloadstr), "%s", (char *) payload);
 
-    printf("%s => %s\n", macstr, payloadstr);
+    if (options.verbose)
+    {
+        printf("%s => %s\n", macstr, payloadstr);
+    }
 
     struct timeval now;
     gettimeofday(&now, NULL);
@@ -95,34 +131,81 @@ void callback(uint8_t mac[6], uint8_t *payload, int len)
     FILE *file = fopen(filename, "w+");
     fprintf(file, "%s => %s\n", macstr, payloadstr);
     fclose(file);
+
+    if (options.verbose)
+    {
+        printf("Wrote to file %s\n", filename);
+    }
 }
+
+
+static volatile int done_listening = 0;
+void interrupt_handler(int ignored)
+{
+    done_listening = 1;
+}
+
+
+static int socket_descriptor;
+void *thread_fn(void *arg)
+{
+    uint8_t raw_bytes[MAX_MESSAGE_SIZE];
+    while (1)
+    {
+        int raw_bytes_len = recvfrom(socket_descriptor, raw_bytes, MAX_MESSAGE_SIZE, MSG_TRUNC, NULL, 0);
+        if (raw_bytes_len < 0)
+        {
+            printf("recvfrom failed: %d\n", errno);
+            return NULL;
+        }
+        else
+        {
+            int radio_tap_len = raw_bytes[2] + (raw_bytes[3] << 8);
+            uint8_t *mac = raw_bytes + radio_tap_len + 10;
+            uint8_t *payload = raw_bytes + radio_tap_len + WLAN_LEN + ACTIONFRAME_HEADER_LEN + VENDORSPECIFIC_CONTENT_LEN;
+            int payload_len = raw_bytes[radio_tap_len + WLAN_LEN + ACTIONFRAME_HEADER_LEN + 1] - 5;
+            if (mac != NULL && payload != NULL && payload_len > 0)
+            {
+                callback(mac, payload, payload_len);
+            }
+        }
+    }
+    return NULL;
+}
+
 
 int main(int argc, char **argv)
 {
-    printf("Running\n");
-    const char *interface = "wlan0";
-    int socket_priority = 7;
+    if (parse_options(argc, argv) < 0)
+    {
+        return -1;
+    }
 
-    struct sockaddr_ll dest_addr;
-    struct ifreq ifreq;
+    signal(SIGINT, interrupt_handler);
 
-    int socket_descriptor = socket(PF_PACKET, SOCK_RAW, htons(ETH_P_ALL));
+    printf("Listening on interface %s\n", options.interface);
+
+    socket_descriptor = socket(PF_PACKET, SOCK_RAW, htons(ETH_P_ALL));
     if (socket_descriptor < 0)
     {
         printf("socket failed: %d\n", errno);
         return 1;
     }
 
-    strncpy((char *) ifreq.ifr_name, interface, IFNAMSIZ);
+    struct ifreq ifreq;
+    strncpy((char *) ifreq.ifr_name, options.interface, IFNAMSIZ);
     if (ioctl(socket_descriptor, SIOCGIFINDEX, &ifreq) < 0)
     {
         printf("ioctl failed: %d\n", errno);
         return 1;
     }
 
-    dest_addr.sll_family = PF_PACKET;
-    dest_addr.sll_protocol = htons(ETH_P_ALL);
-    dest_addr.sll_ifindex = ifreq.ifr_ifindex;
+    const struct sockaddr_ll dest_addr =
+    {
+        .sll_family = PF_PACKET,
+        .sll_protocol = htons(ETH_P_ALL),
+        .sll_ifindex = ifreq.ifr_ifindex
+    };
 
     if (bind(socket_descriptor, (struct sockaddr *) &dest_addr, sizeof(dest_addr)) < 0)
     {
@@ -130,7 +213,7 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    if (setsockopt(socket_descriptor, SOL_SOCKET, SO_PRIORITY, &socket_priority, sizeof(socket_priority)) < 0)
+    if (setsockopt(socket_descriptor, SOL_SOCKET, SO_PRIORITY, &options.socket_priority, sizeof(options.socket_priority)) < 0)
     {
         printf("setsockopt failed setting priority: %d\n", errno);
         return 1;
@@ -142,41 +225,15 @@ int main(int argc, char **argv)
         return 1;
     }
 
+    pthread_t thread;
+    pthread_create(&thread, NULL, thread_fn, NULL);
 
-    uint8_t raw_bytes[MAX_MESSAGE_SIZE];
-    while (1)
+    while (!done_listening)
     {
-        int raw_bytes_len = recvfrom(socket_descriptor, raw_bytes, MAX_MESSAGE_SIZE, MSG_TRUNC, NULL, 0);
-        if (raw_bytes_len < 0)
-        {
-            printf("recvfrom failed: %d\n", errno);
-            return 1;
-        }
-        else
-        {
-            int radio_tap_len = raw_bytes[2] + (raw_bytes[3] << 8);
-            //if (radio_tap_len < 128)
-            //{
-                uint8_t *mac = raw_bytes + radio_tap_len + 10;
-                uint8_t *payload = raw_bytes + radio_tap_len + WLAN_LEN + ACTIONFRAME_HEADER_LEN + VENDORSPECIFIC_CONTENT_LEN;
-                int payload_len = raw_bytes[radio_tap_len + WLAN_LEN + ACTIONFRAME_HEADER_LEN + 1] - 5;
-                if (mac != NULL && payload != NULL && payload_len > 0)
-                {
-                    callback(mac, payload, payload_len);
-                }
-                //else
-                //{
-                    //printf("ignoring invalid message\n");
-                //}
-            //}
-            //else
-            //{
-                //printf("ignoring invalid message (radio tap too long)\n");
-            //}
-        }
-    }
+		pthread_yield();
+	}
 
-    printf("Done\n");
+    printf("\nDone\n");
     return 0;
 }
 
