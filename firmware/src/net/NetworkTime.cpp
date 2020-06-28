@@ -1,6 +1,6 @@
 
 #include <Arduino.h>
-#include <Time.h>
+#include <time.h>
 #include "net/NetworkTime.hpp"
 
 
@@ -35,16 +35,14 @@ bool NetworkTime::setup()
     return true;
 }
 
-time_t NetworkTime::now()
-{
-    return ::now();
-}
-
 String NetworkTime::isotime()
 {
-    const time_t time = now();
-    char timestr[20];
-    snprintf(timestr, 20, "%04d-%02d-%02dT%02d:%02d:%02dZ",
-            year(time), month(time), day(time), hour(time), minute(time), second(time));
+    struct tm tm;
+    getLocalTime(&tm, 500);
+
+    char timestr[22];
+    snprintf(timestr, 22, "%04d-%02d-%02dT%02d:%02d:%02dZ",
+            tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
+
     return String(timestr);
 }

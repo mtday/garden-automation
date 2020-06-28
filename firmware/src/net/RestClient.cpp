@@ -48,7 +48,6 @@ int RestClient::doPost(String url, StaticJsonDocument<1024> message)
 {
     char json[1024];
     const size_t length = serializeJson(message, json);
-    Serial.printf("INFO:  POST %s => %s\n", url.c_str(), json);
     httpClient.begin(url);
     const int status = httpClient.POST((uint8_t *) json, length);
     httpClient.end();
