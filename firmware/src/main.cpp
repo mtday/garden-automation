@@ -108,7 +108,7 @@ void setup()
             for (int tank = 0; tank < NUM_TANKS; tank++)
             {
                 const float distance = sensorDistance->readDistance(tank);
-                if (!restClient->publishTankDistance(device, tank, distance))
+                if (!restClient->publishTankDistance(device, tank + 1, distance))
                 {
                     restart();
                 }

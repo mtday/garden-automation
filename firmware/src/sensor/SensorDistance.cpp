@@ -46,33 +46,32 @@ bool SensorDistance::setup()
 
 float SensorDistance::readDistance(const uint8_t tank)
 {
-    if (TEST_MODE)
+    float distance = 234.56;
+    if (!TEST_MODE)
     {
-        return 234.56;
+        const uint8_t pin = pins[tank];
+
+        // The sensor is triggered by a HIGH pulse of 10 or more microseconds. Give a short LOW pulse
+        // beforehand to ensure a clean HIGH pulse:
+        pinMode(pin, OUTPUT);
+        digitalWrite(pin, LOW);
+        delayMicroseconds(5);
+        digitalWrite(pin, HIGH);
+        delayMicroseconds(10);
+        digitalWrite(pin, LOW);
+
+        // Read the signal from the sensor: a HIGH pulse whose duration is the time (in microseconds)
+        // from the sending of the ping to the reception of its echo off of an object.
+        pinMode(pin, INPUT);
+        const ulong duration = pulseIn(pin, HIGH);
+
+        float temp = sensorWeather->readTemperature();
+        float hum = sensorWeather->readHumidity();
+        float speedOfSound = 0.03314 + (0.606 * temp) + (0.0124 * hum);
+
+        // divide by 2 since duration is round trip, distance in centimeters to the surface of the water
+        const float distance = (duration / 2.0) * speedOfSound;
     }
-
-    const uint8_t pin = pins[tank];
-
-    // The sensor is triggered by a HIGH pulse of 10 or more microseconds. Give a short LOW pulse
-    // beforehand to ensure a clean HIGH pulse:
-    pinMode(pin, OUTPUT);
-    digitalWrite(pin, LOW);
-    delayMicroseconds(5);
-    digitalWrite(pin, HIGH);
-    delayMicroseconds(10);
-    digitalWrite(pin, LOW);
- 
-    // Read the signal from the sensor: a HIGH pulse whose duration is the time (in microseconds)
-    // from the sending of the ping to the reception of its echo off of an object.
-    pinMode(pin, INPUT);
-    const ulong duration = pulseIn(pin, HIGH);
-
-    float temp = sensorWeather->readTemperature();
-    float hum = sensorWeather->readHumidity();
-    float speedOfSound = 0.03314 + (0.606 * temp) + (0.0124 * hum);
-
-    // divide by 2 since duration is round trip, distance in centimeters to the surface of the water
-    const float distance = (duration / 2.0) * speedOfSound;
 
     // to calculate how full the tank is:
     // float percentFull = 100.0 - ((distance - TANK_MIN_READING) / (TANK_MAX_READING - TANK_MIN_READING) * 100.0);
