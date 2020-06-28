@@ -11,13 +11,6 @@
 #include "net/NetworkTime.hpp"
 
 
-typedef struct
-{
-    int statusCode;
-    StaticJsonDocument<1024> body;
-} RestResponse;
-
-
 class RestClient
 {
 private:
@@ -27,8 +20,8 @@ private:
 protected:
     bool setup();
 
-    void doGet(String url, RestResponse *response);
-    void doPost(String url, StaticJsonDocument<1024> message, RestResponse *response);
+    int doGet(String url, StaticJsonDocument<1024> message);
+    int doPost(String url, StaticJsonDocument<1024> message);
 
 public:
     RestClient(NetworkTime *networkTime);
