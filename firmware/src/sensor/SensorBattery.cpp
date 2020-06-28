@@ -42,7 +42,8 @@ bool SensorBattery::setup()
 bool SensorBattery::loop()
 {
     const ulong now = millis();
-    if (now - lastBatteryNotification > READING_BATTERY_INTERVAL)
+    const ulong interval = TEST_MODE ? READING_BATTERY_INTERVAL_TEST_MODE : READING_BATTERY_INTERVAL;
+    if (now - lastBatteryNotification > interval)
     {
         lastBatteryNotification = now;
         const float voltage = readVoltage();
