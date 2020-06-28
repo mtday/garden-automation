@@ -5,7 +5,6 @@
 
 #include "Device.hpp"
 #include "control/ControlDripValve.hpp"
-#include "net/EspNow.hpp"
 #include "net/Network.hpp"
 #include "net/NetworkTime.hpp"
 #include "net/RestClient.hpp"
@@ -17,7 +16,6 @@
 
 static Device *device;
 
-static EspNow *espNow;
 static Network *network;
 static NetworkTime *networkTime;
 static RestClient *restClient;
@@ -42,7 +40,7 @@ void deepSleep(const ulong seconds)
 void restart()
 {
     Serial.flush(); 
-    delay(3000);
+    delay(10000);
     esp_restart();
 }
 
@@ -60,7 +58,6 @@ void setup()
     Serial.printf("INFO:  Initializing device %s\n", device->c_str());
 
     bool initialized =
-        EspNow::get(&espNow) &&
         Network::get(&network) &&
         NetworkTime::get(&networkTime) &&
         RestClient::get(&restClient, networkTime) &&
@@ -87,9 +84,6 @@ void setup()
             const float light = sensorLight->readLight();
 
             bool success =
-                espNow->sendBattery(voltage) &&
-                espNow->sendWeather(temperature, humidity, pressure) &&
-                espNow->sendLight(light) &&
                 restClient->publishBatteryVoltage(device, voltage) &&
                 restClient->publishWeatherTemperature(device, temperature) &&
                 restClient->publishWeatherHumidity(device, humidity) &&
@@ -99,26 +93,26 @@ void setup()
             {
                 restart();
             }
-            deepSleep(WEATHER_SLEEP_PERIOD);
+            deepSleep(TEST_MODE ? WEATHER_SLEEP_PERIOD_TEST_MODE : WEATHER_SLEEP_PERIOD);
         }
 
         case DeviceTypeTankGroup:
         {
             Serial.println("INFO:  Performing tank readings");
             const float voltage = sensorBattery->readVoltage();
-            if (!espNow->sendBattery(voltage) || !restClient->publishBatteryVoltage(device, voltage))
+            if (!restClient->publishBatteryVoltage(device, voltage))
             {
                 restart();
             }
             for (int tank = 0; tank < NUM_TANKS; tank++)
             {
                 const float distance = sensorDistance->readDistance(tank);
-                if (!espNow->sendTankDistance(tank, distance) || !restClient->publishTankDistance(device, tank, distance))
+                if (!restClient->publishTankDistance(device, tank, distance))
                 {
                     restart();
                 }
             }
-            deepSleep(TANK_SLEEP_PERIOD);
+            deepSleep(TEST_MODE ? TANK_SLEEP_PERIOD_TEST_MODE : TANK_SLEEP_PERIOD);
         }
 
         case DeviceTypeDripValve:
