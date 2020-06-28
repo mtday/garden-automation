@@ -47,7 +47,7 @@ bool SensorBattery::loop()
     {
         lastBatteryNotification = now;
         const float voltage = readVoltage();
-        if (!restClient->publishBatteryVoltage(Device::get(), voltage))
+        if (!restClient->publishBatteryVoltage(voltage))
         {
             return false;
         }

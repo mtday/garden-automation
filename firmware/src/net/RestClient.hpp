@@ -6,7 +6,6 @@
 #include <ArduinoJson.h>
 #include <HTTPClient.h>
 #include <stdint.h>
-#include "Device.hpp"
 #include "control/ControlDripValve.hpp"
 #include "net/NetworkTime.hpp"
 
@@ -27,13 +26,13 @@ public:
     RestClient(NetworkTime *networkTime);
     static bool get(RestClient **ref, NetworkTime *networkTime);
 
-    bool publishBatteryVoltage(Device *device, const float voltage);
-    bool publishWeatherTemperature(Device *device, const float temperature);
-    bool publishWeatherHumidity(Device *device, const float humidity);
-    bool publishWeatherPressure(Device *device, const float pressure);
-    bool publishWeatherLight(Device *device, const float light);
-    bool publishTankDistance(Device *device, const uint8_t tank, const float distance);
-    bool publishDripValveState(Device *device, const DripValveState state);
+    bool publishBatteryVoltage(const float voltage);
+    bool publishWeatherTemperature(const float temperature);
+    bool publishWeatherHumidity(const float humidity);
+    bool publishWeatherPressure(const float pressure);
+    bool publishWeatherLight(const float light);
+    bool publishTankDistance(const float distance);
+    bool publishDripValveState(const DripValveState state);
 };
 
 

@@ -85,11 +85,11 @@ void setup()
             const float light = sensorLight->readLight();
 
             bool success =
-                restClient->publishBatteryVoltage(device, voltage) &&
-                restClient->publishWeatherTemperature(device, temperature) &&
-                restClient->publishWeatherHumidity(device, humidity) &&
-                restClient->publishWeatherPressure(device, pressure) &&
-                restClient->publishWeatherLight(device, light);
+                restClient->publishBatteryVoltage(voltage) &&
+                restClient->publishWeatherTemperature(temperature) &&
+                restClient->publishWeatherHumidity(humidity) &&
+                restClient->publishWeatherPressure(pressure) &&
+                restClient->publishWeatherLight(light);
             if (success)
             {
                 restart();
@@ -101,17 +101,14 @@ void setup()
         {
             Serial.println("INFO:  Performing tank readings");
             const float voltage = sensorBattery->readVoltage();
-            if (!restClient->publishBatteryVoltage(device, voltage))
+            if (!restClient->publishBatteryVoltage(voltage))
             {
                 restart();
             }
-            for (int tank = 0; tank < NUM_TANKS; tank++)
+            const float distance = sensorDistance->readDistance();
+            if (!restClient->publishTankDistance(distance))
             {
-                const float distance = sensorDistance->readDistance(tank);
-                if (!restClient->publishTankDistance(device, tank + 1, distance))
-                {
-                    restart();
-                }
+                restart();
             }
             deepSleep(TEST_MODE ? TANK_SLEEP_PERIOD_TEST_MODE : TANK_SLEEP_PERIOD);
         }

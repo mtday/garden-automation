@@ -19,7 +19,7 @@ public:
     SensorDistance(SensorWeather *sensorWeather);
     static bool get(SensorDistance **ref, DeviceType deviceType, SensorWeather *sensorWeather);
 
-    float readDistance(const uint8_t tank);
+    float readDistance();
 };
 
 

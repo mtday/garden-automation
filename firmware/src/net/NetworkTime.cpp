@@ -38,7 +38,7 @@ bool NetworkTime::setup()
 String NetworkTime::isotime()
 {
     struct tm tm;
-    getLocalTime(&tm, 500);
+    getLocalTime(&tm, 5000);
 
     char timestr[22];
     snprintf(timestr, 22, "%04d-%02d-%02dT%02d:%02d:%02dZ",

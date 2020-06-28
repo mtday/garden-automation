@@ -1,4 +1,5 @@
 
+#include "Device.hpp"
 #include "net/RestClient.hpp"
 
 
@@ -46,22 +47,28 @@ int RestClient::doGet(String url, StaticJsonDocument<1024> response)
 
 int RestClient::doPost(String url, StaticJsonDocument<1024> message)
 {
+    char mac[18];
+    strncpy(mac, Device::get()->getMac().c_str(), 18);
+
+    // add common fields to the message
+    message["device"] = mac;
+    message["test"] = TEST_MODE;
+    message["timestamp"] = networkTime->isotime().c_str();
+
     char json[1024];
-    const size_t length = serializeJson(message, json);
+    size_t length = serializeJson(message, json);
+
     httpClient.begin(url);
     const int status = httpClient.POST((uint8_t *) json, length);
     httpClient.end();
     return status;
 }
 
-bool RestClient::publishBatteryVoltage(Device *device, const float voltage)
+bool RestClient::publishBatteryVoltage(const float voltage)
 {
     StaticJsonDocument<1024> message;
-    message["test"] = TEST_MODE;
-    message["source"] = device->getMac().c_str();
     message["voltage"] = voltage;
     message["unit"] = "percent";
-    message["timestamp"] = networkTime->isotime();
 
     Serial.println("INFO:  Publishing battery voltage to server");
     const int status = doPost(baseUrl + "/rest/battery/voltage", message);
@@ -72,14 +79,11 @@ bool RestClient::publishBatteryVoltage(Device *device, const float voltage)
     return true;
 }
 
-bool RestClient::publishWeatherTemperature(Device *device, const float temperature)
+bool RestClient::publishWeatherTemperature(const float temperature)
 {
     StaticJsonDocument<1024> message;
-    message["test"] = TEST_MODE;
-    message["source"] = device->getMac().c_str();
     message["temperature"] = temperature;
     message["unit"] = "celcius";
-    message["timestamp"] = networkTime->isotime();
 
     Serial.println("INFO:  Publishing weather temperature to server");
     const int status = doPost(baseUrl + "/rest/weather/temperature", message);
@@ -90,14 +94,11 @@ bool RestClient::publishWeatherTemperature(Device *device, const float temperatu
     return true;
 }
 
-bool RestClient::publishWeatherHumidity(Device *device, const float humidity)
+bool RestClient::publishWeatherHumidity(const float humidity)
 {
     StaticJsonDocument<1024> message;
-    message["test"] = TEST_MODE;
-    message["source"] = device->getMac().c_str();
     message["humidity"] = humidity;
     message["unit"] = "percent";
-    message["timestamp"] = networkTime->isotime();
 
     Serial.println("INFO:  Publishing weather humidity to server");
     const int status = doPost(baseUrl + "/rest/weather/humidity", message);
@@ -108,14 +109,11 @@ bool RestClient::publishWeatherHumidity(Device *device, const float humidity)
     return true;
 }
 
-bool RestClient::publishWeatherPressure(Device *device, const float pressure)
+bool RestClient::publishWeatherPressure(const float pressure)
 {
     StaticJsonDocument<1024> message;
-    message["test"] = TEST_MODE;
-    message["source"] = device->getMac().c_str();
     message["pressure"] = pressure;
     message["unit"] = "pascals";
-    message["timestamp"] = networkTime->isotime();
 
     Serial.println("INFO:  Publishing atmospheric pressure to server");
     const int status = doPost(baseUrl + "/rest/weather/pressure", message);
@@ -126,14 +124,11 @@ bool RestClient::publishWeatherPressure(Device *device, const float pressure)
     return true;
 }
 
-bool RestClient::publishWeatherLight(Device *device, const float light)
+bool RestClient::publishWeatherLight(const float light)
 {
     StaticJsonDocument<1024> message;
-    message["test"] = TEST_MODE;
-    message["source"] = device->getMac().c_str();
     message["light"] = light;
     message["unit"] = "percent";
-    message["timestamp"] = networkTime->isotime();
 
     Serial.println("INFO:  Publishing ambient light to server");
     const int status = doPost(baseUrl + "/rest/weather/light", message);
@@ -144,17 +139,13 @@ bool RestClient::publishWeatherLight(Device *device, const float light)
     return true;
 }
 
-bool RestClient::publishTankDistance(Device *device, const uint8_t tank, const float distance)
+bool RestClient::publishTankDistance(const float distance)
 {
     StaticJsonDocument<1024> message;
-    message["test"] = TEST_MODE;
-    message["source"] = device->getMac().c_str();
-    message["tank"] = tank;
     message["distance"] = distance;
     message["unit"] = "centimeters";
-    message["timestamp"] = networkTime->isotime();
 
-    Serial.printf("INFO:  Publishing tank %d distance to server\n", tank);
+    Serial.printf("INFO:  Publishing tank distance to server\n");
     const int status = doPost(baseUrl + "/rest/tank/distance", message);
     if (status != 200) {
         Serial.printf("ERROR: Unexpected response from server: %d\n", status);
@@ -163,13 +154,10 @@ bool RestClient::publishTankDistance(Device *device, const uint8_t tank, const f
     return true;
 }
 
-bool RestClient::publishDripValveState(Device *device, const DripValveState state)
+bool RestClient::publishDripValveState(const DripValveState state)
 {
     StaticJsonDocument<1024> message;
-    message["test"] = TEST_MODE;
-    message["source"] = device->getMac().c_str();
     message["state"] = state;
-    message["timestamp"] = networkTime->isotime();
 
     Serial.println("INFO:  Publishing drip valve state to server");
     const int status = doPost(baseUrl + "/rest/dripValve/state", message);
