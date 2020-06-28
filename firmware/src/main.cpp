@@ -55,6 +55,7 @@ void setup()
         restart();
     }
 
+    Serial.println();
     Serial.printf("INFO:  Initializing device %s\n", device->c_str());
 
     bool initialized =

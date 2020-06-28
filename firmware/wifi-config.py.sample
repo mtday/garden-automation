@@ -1,4 +1,20 @@
+Import("env")
 import os
 
-os.environ["WIFI_SSID"] = "my-ssid"
-os.environ["WIFI_PASSWORD"] = "my-password"
+default_ssid = "my-ssid"
+default_password = "my-password"
+
+
+ssid = default_ssid
+if "WIFI_SSID" in os.environ:
+    ssid = os.environ["WIFI_SSID"]
+
+password = default_password
+if "WIFI_PASSWORD" in os.environ:
+    password = os.environ["WIFI_PASSWORD"]
+
+
+env.Append(CPPDEFINES=[
+    ("WIFI_SSID", "\\\"" + ssid + "\\\""),
+    ("WIFI_PASSWORD", "\\\"" + password + "\\\"")
+])
