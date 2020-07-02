@@ -13,7 +13,6 @@
 class RestClient
 {
 private:
-    NetworkTime *networkTime;
     HTTPClient httpClient;
 
 protected:
@@ -23,8 +22,8 @@ protected:
     int doPost(String url, StaticJsonDocument<1024> message);
 
 public:
-    RestClient(NetworkTime *networkTime);
-    static bool get(RestClient **ref, NetworkTime *networkTime);
+    RestClient();
+    static bool get(RestClient **ref);
 
     bool publishBatteryVoltage(const float voltage);
     bool publishWeatherTemperature(const float temperature);

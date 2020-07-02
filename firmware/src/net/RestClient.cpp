@@ -7,19 +7,18 @@ static RestClient *restClient;
 static const String baseUrl = String("http://") + NODE_RED_HOST + ":" + NODE_RED_PORT;
 
 
-RestClient::RestClient(NetworkTime *networkTime)
+RestClient::RestClient()
 {
-    RestClient::networkTime = networkTime;
 }
 
-bool RestClient::get(RestClient **ref, NetworkTime *networkTime)
+bool RestClient::get(RestClient **ref)
 {
     if (restClient)
     {
         *ref = restClient;
         return true;
     }
-    restClient = new RestClient(networkTime);
+    restClient = new RestClient();
     if (!restClient->setup())
     {
         restClient = *ref = NULL;
@@ -53,7 +52,6 @@ int RestClient::doPost(String url, StaticJsonDocument<1024> message)
     // add common fields to the message
     message["device"] = mac;
     message["test"] = TEST_MODE;
-    message["timestamp"] = networkTime->isotime().c_str();
 
     char json[1024];
     size_t length = serializeJson(message, json);
@@ -160,7 +158,7 @@ bool RestClient::publishDripValveState(const DripValveState state)
     message["state"] = state;
 
     Serial.println("INFO:  Publishing drip valve state to server");
-    const int status = doPost(baseUrl + "/rest/dripValve/state", message);
+    const int status = doPost(baseUrl + "/rest/dripvalve/state", message);
     if (status != 200) {
         Serial.printf("ERROR: Unexpected response from server: %d\n", status);
         return false;

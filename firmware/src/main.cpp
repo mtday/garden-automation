@@ -61,7 +61,7 @@ void setup()
     bool initialized =
         Network::get(&network) &&
         NetworkTime::get(&networkTime) &&
-        RestClient::get(&restClient, networkTime) &&
+        RestClient::get(&restClient) &&
         SensorBattery::get(&sensorBattery, device->getType(), restClient) &&
         SensorWeather::get(&sensorWeather, device->getType()) &&
         SensorLight::get(&sensorLight, device->getType()) &&
